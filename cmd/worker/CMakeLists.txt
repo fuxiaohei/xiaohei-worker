@@ -1,0 +1,12 @@
+# src
+add_executable(worker.app 
+    main.cc
+)
+
+# link
+target_link_libraries(worker.app
+    ${libhv_file}
+    ${libcrypto_file}
+    ${libssl_file}
+    pthread
+)
