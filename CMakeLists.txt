@@ -34,6 +34,8 @@ find_library(libhv_file hv_static "${thirdparty_dir}/libhv/lib/")
 find_library(libcrypto_file crypto "${thirdparty_dir}/openssl/lib/")
 find_library(libssl_file ssl "${thirdparty_dir}/openssl/lib/")
 
+# add libraries
+add_subdirectory(src/core)
 
-# add workify cmd
+# add worker cmd
 add_subdirectory(cmd/worker)
