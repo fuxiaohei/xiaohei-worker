@@ -6,6 +6,8 @@ add_executable(worker.app
 # link
 target_link_libraries(worker.app
     worker_core
+    worker_v8wrap
+    ${libv8_file}
     ${libhv_file}
     ${libcrypto_file}
     ${libssl_file}

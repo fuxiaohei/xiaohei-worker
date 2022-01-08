@@ -22,6 +22,7 @@ add_definitions("-g -DV8_COMPRESS_POINTERS -O0 -fno-rtti")
 
 # include headers
 include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(${CMAKE_SOURCE_DIR}/src/lib)
 
 # include dependencies
 set(thirdparty_dir ${CMAKE_SOURCE_DIR}/thirdparty)
@@ -34,8 +35,13 @@ find_library(libhv_file hv_static "${thirdparty_dir}/libhv/lib/")
 find_library(libcrypto_file crypto "${thirdparty_dir}/openssl/lib/")
 find_library(libssl_file ssl "${thirdparty_dir}/openssl/lib/")
 
+# v8
+include_directories(${thirdparty_dir}/v8/include)
+find_library(libv8_file v8_monolith "${thirdparty_dir}/v8/lib/")
+
 # add libraries
 add_subdirectory(src/core)
+add_subdirectory(src/lib/v8wrap)
 
 # add worker cmd
 add_subdirectory(cmd/worker)

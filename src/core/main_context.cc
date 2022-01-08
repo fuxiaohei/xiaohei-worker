@@ -10,6 +10,7 @@
 #include <hv/hthread.h>
 #include <hv/hversion.h>
 #include <hv/iniparser.h>
+#include <lib/v8wrap/v8wrap.h>
 #include <stdio.h>
 
 #include <cstdlib>
@@ -23,7 +24,7 @@ MainContext::MainContext(int argc, char **argv) {
     if (signum == SIGINT) {
       hlogi("http server stop");
       Shared(0, nullptr)->exit();
-      // v8wrap::shutdown();
+      v8wrap::shutdown();
       hlogi("process exit, pid=%d", hv_getpid());
       std::exit(0);
       return;
@@ -51,6 +52,9 @@ int MainContext::run(int argc, char **argv) {
   if (parse_flags(argc, argv) != 0) {
     return -1;
   }
+
+  // init v8
+  v8wrap::init("");
 
   // set http router
   hv::HttpService service;
