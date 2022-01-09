@@ -4,6 +4,7 @@
  * license information.
  */
 
+#include <core/container.h>
 #include <core/main_context.h>
 #include <hv/hlog.h>
 #include <hv/hmain.h>
@@ -69,6 +70,20 @@ int MainContext::run(int argc, char **argv) {
 }
 
 int MainContext::http_handler(const HttpContextPtr &ctx) {
+  // generate key by path
+  auto key = ctx->request->Path();
+  key.erase(key.begin());
+  if (key.back() == '/') {
+    key.pop_back();
+  }
+
+  // get worker
+  auto worker = Container::GetWorker(key);
+  if (worker == nullptr) {
+    ctx->setStatus(HTTP_STATUS_NOT_FOUND);
+    return ctx->sendString("script not found");
+  }
+
   ctx->setBody("hello world");
   return HTTP_STATUS_OK;
 }

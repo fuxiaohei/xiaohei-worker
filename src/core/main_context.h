@@ -17,7 +17,11 @@ class MainContext {
  public:
   static int Run(int argc, char **argv);
 
+ public:
+  std::string get_direcotry() const { return directory_; }
+
  private:
+  friend class Worker;
   static MainContext *Shared(int argc, char **argv);
 
  private:
