@@ -1,0 +1,10 @@
+/*
+ * Copyright (c) 2021 fuxiaohei. All rights reserved.
+ * Licensed under the MIT License. See License file in the project root for
+ * license information.
+ */
+
+#pragma once
+
+#define PROJECT_NAME "@PROJECT_NAME@"
+#define PROJECT_VERSION "@PROJECT_VERSION@"

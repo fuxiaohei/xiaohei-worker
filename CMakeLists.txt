@@ -39,9 +39,12 @@ find_library(libssl_file ssl "${thirdparty_dir}/openssl/lib/")
 include_directories(${thirdparty_dir}/v8/include)
 find_library(libv8_file v8_monolith "${thirdparty_dir}/v8/lib/")
 
+configure_file(${CMAKE_SOURCE_DIR}/src/lib/common/version.h.in  ${CMAKE_SOURCE_DIR}/src/lib/common/version.h @ONLY)
+
 # add libraries
-add_subdirectory(src/core)
+add_subdirectory(src/lib/common)
 add_subdirectory(src/lib/v8wrap)
+add_subdirectory(src/core)
 
 # add worker cmd
 add_subdirectory(cmd/worker)
