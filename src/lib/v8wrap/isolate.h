@@ -55,6 +55,7 @@ class IsolateData {
   void setClassTemplate(const std::string &name, v8::Local<v8::FunctionTemplate> fnTpl);
   v8::Local<v8::FunctionTemplate> getClassTemplate(const std::string &name);
   bool hasClassTemplate(const std::string &name);
+  v8::Isolate *get_isolate() const { return isolate_; }
 
  private:
   explicit IsolateData(v8::Isolate *isolate);

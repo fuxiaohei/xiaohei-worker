@@ -4,8 +4,8 @@
  * license information.
  */
 
+#include <common/common.h>
 #include <hv/hlog.h>
-#include <lib/common/common.h>
 #include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/isolate.h>

@@ -7,14 +7,10 @@
 #pragma once
 
 #include <v8.h>
-
-#define CLASS_SERVICEWORKER_GLOBAL_SCOPE "ServiceWorkerGlobalScope"
-#define CLASS_WORKER_GLOBAL_SCOPE "WorkerGlobalScope"
-
-#define CLASS_EVENT_TARGET "EventTarget"
+#include <v8wrap/isolate.h>
 
 namespace v8serviceworker {
 
-v8::Local<v8::FunctionTemplate> create_service_worker_global_scope(v8::Isolate *isolate);
+v8::Local<v8::FunctionTemplate> create_event_target_template(v8wrap::IsolateData *isolateData);
 
 };  // namespace v8serviceworker
