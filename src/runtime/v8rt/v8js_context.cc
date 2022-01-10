@@ -4,10 +4,13 @@
  * license information.
  */
 
+#include <bindings/v8serviceworker/serviceworker.h>
 #include <lib/common/common.h>
 #include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
+#include <v8wrap/isolate.h>
 #include <v8wrap/js_value.h>
+#include <v8wrap/v8wrap.h>
 
 namespace xhworker {
 namespace runtime {
@@ -15,11 +18,17 @@ namespace runtime {
 V8JsContext *V8JsContext::Create(V8Runtime *rt, const std::string &content,
                                  const std::string &origin) {
   auto isolate = rt->get_isolate();
+  auto isolateData = v8wrap::IsolateData::Get(isolate);
 
   v8::Isolate::Scope isolate_scope(isolate);
   v8::HandleScope handle_scope(isolate);
 
-  v8::Local<v8::Context> context = v8::Context::New(isolate);
+  auto globalTemplate = isolateData->getClassTemplate(CLASS_SERVICEWORKER_GLOBAL_SCOPE);
+  if (globalTemplate.IsEmpty()) {
+    globalTemplate = v8serviceworker::create_service_worker_global_scope(isolate);
+  }
+
+  v8::Local<v8::Context> context = v8wrap::new_context(isolate, globalTemplate->InstanceTemplate());
 
   v8::TryCatch try_catch(isolate);
   v8::Context::Scope context_scope(context);

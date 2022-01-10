@@ -49,5 +49,9 @@ add_subdirectory(src/lib/v8wrap)
 add_subdirectory(src/runtime)
 add_subdirectory(src/core)
 
+if (BUILD_V8_RUNTIME)
+    add_subdirectory(src/bindings/v8serviceworker)
+endif()
+
 # add worker cmd
 add_subdirectory(cmd/worker)

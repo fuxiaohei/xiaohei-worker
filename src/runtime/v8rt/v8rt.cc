@@ -41,12 +41,13 @@ RuntimeContext *V8Runtime::get_context() {
   // if queue is empty create new one
   if (context_queue_.empty()) {
     jsContext = V8JsContext::Create(this, content_, origin_);
-    hlogd("v8js: create ctx, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext,
+    hlogd("v8js: create jsContext, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext,
           context_queue_.size());
   } else {
     jsContext = context_queue_.front();
     context_queue_.pop();
-    hlogd("v8js: get ctx, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext, context_queue_.size());
+    hlogd("v8js: get jsContext, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext,
+          context_queue_.size());
   }
 
   return jsContext;
@@ -86,8 +87,8 @@ int V8Runtime::compile(const std::string &content, const std::string &origin) {
   }
 
   context_queue_.push(jsContext);
-  hlogd("v8js: create jsContext, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext,
-        context_queue_.size());
+  hlogd("v8js: create jsContext, iso:%p, jsCtx:%p, queue:%ld, result:%s", isolate_, jsContext,
+        context_queue_.size(), jsContext->get_compiled_result().data());
   return 0;
 }
 

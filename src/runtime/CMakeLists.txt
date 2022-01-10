@@ -15,3 +15,8 @@ add_library(worker_runtime
 )
 
 target_include_directories (worker_runtime PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+if (BUILD_V8_RUNTIME)
+    target_link_libraries(worker_runtime 
+        worker_v8serviceworker)
+endif ()

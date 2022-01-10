@@ -22,6 +22,7 @@ class V8JsContext : public RuntimeContext {
 
  public:
   int get_error_code() const { return error_code_; }
+  std::string get_compiled_result() const { return compiled_result_; }
 
   void set_compiled_result(const std::string &result);
   void set_exception(const std::string &msg, const std::string &stack);
