@@ -6,6 +6,7 @@
 
 #include <core/container.h>
 #include <core/main_context.h>
+#include <core/worker.h>
 #include <hv/hlog.h>
 #include <hv/hmain.h>
 #include <hv/hthread.h>
@@ -84,8 +85,7 @@ int MainContext::http_handler(const HttpContextPtr &ctx) {
     return ctx->sendString("script not found");
   }
 
-  ctx->setBody("hello world");
-  return HTTP_STATUS_OK;
+  return worker->handle_http_request(ctx);
 }
 
 void MainContext::exit() { server_.stop(); }

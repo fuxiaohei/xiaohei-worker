@@ -5,6 +5,8 @@
  */
 
 #include <hv/hlog.h>
+#include <lib/common/common.h>
+#include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/isolate.h>
 
@@ -33,11 +35,61 @@ V8Runtime::~V8Runtime() {
   allocator_ = nullptr;
 }
 
-RuntimeContext *V8Runtime::get_context() { return nullptr; }
+RuntimeContext *V8Runtime::get_context() {
+  RuntimeContext *jsContext;
 
-void V8Runtime::recycle_context(RuntimeContext *context) {}
+  // if queue is empty create new one
+  if (context_queue_.empty()) {
+    jsContext = V8JsContext::Create(this, content_, origin_);
+    hlogd("v8js: create ctx, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext,
+          context_queue_.size());
+  } else {
+    jsContext = context_queue_.front();
+    context_queue_.pop();
+    hlogd("v8js: get ctx, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext, context_queue_.size());
+  }
 
-int V8Runtime::compile(const std::string &content, const std::string &origin) { return 0; }
+  return jsContext;
+}
+
+void V8Runtime::recycle_context(RuntimeContext *context) {
+  V8JsContext *jsContext = static_cast<V8JsContext *>(context);
+  if (jsContext->get_error_code() != 0) {
+    hlogd("v8js: recycle error jsContext, jsCtx:%p, error_code:%d, msg:%s", jsContext,
+          jsContext->get_error_code(), jsContext->get_exception_msg().c_str());
+    delete jsContext;
+    return;
+  }
+  // push bach to queue
+  context_queue_.push(jsContext);
+  hlogd("v8js: recycle jsContext, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext,
+        context_queue_.size());
+}
+
+int V8Runtime::compile(const std::string &content, const std::string &origin) {
+  content_ = content;
+  origin_ = origin;
+
+  auto jsContext = V8JsContext::Create(this, content_, origin_);
+  if (jsContext == nullptr) {
+    hlogw("v8js: compile nullptr, iso:%p, jsCtx:%p, error_code:%d, msg:%s", isolate_, jsContext,
+          jsContext->get_error_code(), jsContext->get_exception_msg().c_str());
+    return common::ERROR_RUNTIME_COMPILE_ERROR;
+  }
+
+  if (jsContext->get_error_code() != 0) {
+    int error_code = jsContext->get_error_code();
+    compile_error_message_ = jsContext->get_exception_msg();
+    hlogw("v8js: compile error, error_code:%d, msg:%s", error_code, compile_error_message_.c_str());
+    delete jsContext;
+    return error_code;
+  }
+
+  context_queue_.push(jsContext);
+  hlogd("v8js: create jsContext, iso:%p, jsCtx:%p, queue:%ld", isolate_, jsContext,
+        context_queue_.size());
+  return 0;
+}
 
 }  // namespace runtime
 }  // namespace xhworker

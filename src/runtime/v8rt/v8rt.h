@@ -9,6 +9,8 @@
 #include <runtime/runtime.h>
 #include <v8.h>
 
+#include <queue>
+
 #define V8_JS_ISOLATE_MEMORY_LIMIT 128  // in mb
 
 namespace xhworker {
@@ -20,6 +22,7 @@ class V8Runtime : public Runtime {
   void recycle_context(RuntimeContext *context);
   int compile(const std::string &content, const std::string &origin);
   std::string get_compile_error_message() { return compile_error_message_; }
+  v8::Isolate *get_isolate() { return isolate_; }
 
  private:
   friend class Runtime;
@@ -33,6 +36,8 @@ class V8Runtime : public Runtime {
 
   v8::Isolate *isolate_ = nullptr;
   v8::ArrayBuffer::Allocator *allocator_ = nullptr;
+
+  std::queue<RuntimeContext *> context_queue_;
 };
 
 }  // namespace runtime

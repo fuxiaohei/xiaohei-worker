@@ -97,6 +97,28 @@ int Worker::prepare_runtime() {
   return runner_->compile(manifest_->content, manifest_->key);
 }
 
+std::string Worker::error_response_body() {
+  if (error_code_ == 0) {
+    return "";
+  }
+  std::string body = common::error_message(error_code_);
+  if (!error_msg_.empty()) {
+    body += "\n";
+    body += error_msg_;
+  }
+  return body;
+}
+
+int Worker::handle_http_request(const HttpContextPtr &ctx) {
+  if (error_code_ != 0) {
+    ctx->setBody(error_response_body());
+    return HTTP_STATUS_INTERNAL_SERVER_ERROR;
+  }
+
+  ctx->setBody("hello worker!");
+  return HTTP_STATUS_OK;
+}
+
 Worker::~Worker() {
   hlogd("worker: destroy, worker:%p", this);
   delete manifest_;

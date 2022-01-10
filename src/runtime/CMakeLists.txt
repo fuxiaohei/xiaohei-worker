@@ -3,6 +3,7 @@ if (BUILD_V8_RUNTIME)
     message("-- BUILD_V8_RUNTIME")
     set(v8rt_src_files 
         "v8rt/v8rt.cc"
+        "v8rt/v8js_context.cc"
     )
 endif ()
 
