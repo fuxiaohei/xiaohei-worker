@@ -9,6 +9,8 @@
 namespace xhworker {
 namespace core {
 
+using namespace xhworker;
+
 Manifest *Worker::ReadManifest(const std::string &dir, const std::string &key) {
   Manifest *manifest = new Manifest();
   manifest->key = key;
@@ -34,12 +36,12 @@ Manifest *Worker::ReadManifest(const std::string &dir, const std::string &key) {
     return manifest;
   }
 
-  auto content_type = json["content_type"].get<std::string>();
+  auto runtime_type = json["runtime_type"].get<std::string>();
   auto entry = json["entry"].get<std::string>();
 
   // read json
-  if (content_type == "application/javascript") {
-    manifest->type = 1;  // runner::RT_JS_V8;
+  if (runtime_type == "js_v8") {
+    manifest->type = runtime::RT_JS_V8;
 
     // read entry file
     std::filesystem::path entry_path(dir);
@@ -78,19 +80,29 @@ Worker::Worker(Manifest *manifest) : manifest_(manifest) {
   if (error_code_ != 0) {
     return;
   }
-  /*
   error_code_ = prepare_runtime();
-  if (error_code_ != 0) {
-      error_msg_ = runner_->get_compile_error_message();
-  }*/
+  if (error_code_ != 0 && runner_ != nullptr) {
+    error_msg_ = runner_->get_compile_error_message();
+  }
   hlogd("worker: prepare runtime, worker:%p, errcode:%d, errmsg:%s", this, error_code_,
         error_msg_.c_str());
+}
+
+int Worker::prepare_runtime() {
+  runtime::Options options;
+  runner_ = runtime::Runtime::create(manifest_->type, options);
+  if (runner_ == nullptr) {
+    return common::ERROR_RUNTIME_UNKNOWN;
+  }
+  return runner_->compile(manifest_->content, manifest_->key);
 }
 
 Worker::~Worker() {
   hlogd("worker: destroy, worker:%p", this);
   delete manifest_;
-  // delete runner_;
+  if (runner_) {
+    runtime::Runtime::release(runner_);
+  }
 }
 
 void Worker::destroy() { delete this; }

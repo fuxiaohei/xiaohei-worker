@@ -17,6 +17,8 @@ set(OS_ARCH "${CMAKE_SYSTEM_PROCESSOR}")
 # set system library dependencies
 find_package(Threads REQUIRED)
 
+option(BUILD_V8_RUNTIME "Build v8 runtime" ON)
+
 # add compile arguments
 add_definitions("-g -DV8_COMPRESS_POINTERS -O0 -fno-rtti")
 
@@ -44,6 +46,7 @@ configure_file(${CMAKE_SOURCE_DIR}/src/lib/common/version.h.in  ${CMAKE_SOURCE_D
 # add libraries
 add_subdirectory(src/lib/common)
 add_subdirectory(src/lib/v8wrap)
+add_subdirectory(src/runtime)
 add_subdirectory(src/core)
 
 # add worker cmd

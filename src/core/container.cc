@@ -51,13 +51,13 @@ Worker *Container::install_worker(const std::string &key) {
     return nullptr;
   }
 
-  hlogd("manager: install new worker, key:%s, worker:%p, errcode:%d", key.data(), worker,
-        worker->get_error_code());
-
   // if worker is ok, it can be cached
   if (worker->get_error_code() == 0) {
     workers_[key] = worker;
-    hlogd("manager: cache new worker, key:%s, worker:%p", key.data(), worker);
+    hlogd("manager: create normal worker, key:%s, worker:%p", key.data(), worker);
+  } else {
+    hlogw("manager: create bad worker, key:%s, worker:%p, errcode:%d", key.data(), worker,
+          worker->get_error_code());
   }
 
   return worker;

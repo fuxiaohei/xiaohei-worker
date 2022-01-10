@@ -1,5 +1,6 @@
 add_library(worker_v8wrap
     v8wrap.cc
+    isolate.cc
 
     js_class.cc
     js_object.cc

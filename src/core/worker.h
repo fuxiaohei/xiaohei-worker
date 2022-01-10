@@ -8,6 +8,7 @@
 
 #include <common/common.h>
 #include <hv/HttpServer.h>
+#include <runtime/runtime.h>
 
 #include <string>
 
@@ -42,7 +43,7 @@ class Worker : public common::RefCounted {
   int prepare_runtime();
   std::string error_response_body();
 
-  // runner::Runner *runner_ = nullptr;
+  xhworker::runtime::Runtime* runner_ = nullptr;
 
   int error_code_ = 0;
   std::string error_msg_;
