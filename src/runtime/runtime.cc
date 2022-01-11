@@ -16,7 +16,6 @@ namespace xhworker {
 namespace runtime {
 
 Runtime *Runtime::create(int rttype, const Options &options) {
-
 #if BUILD_V8_RUNTIME
   if (rttype == RT_JS_V8) {
     return new V8Runtime(options);
@@ -29,5 +28,5 @@ Runtime *Runtime::create(int rttype, const Options &options) {
 void Runtime::release(Runtime *runtime) {}
 
 }  // namespace runtime
-
 }  // namespace xhworker
+

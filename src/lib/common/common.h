@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021 fuxiaohei. All rights reserved.
- * Licensed under the MIT License. See License file in the project root for
+ * Licensed under the Apache 2.0 License. See License file in the project root for
  * license information.
  */
 
@@ -10,15 +10,16 @@
 
 namespace common {
 
-#define FOREACH_ERROR_STATUS(F)                          \
-  F(0, OK, "ok")                                         \
-  F(-1, MANIFEST_NOT_FOUND, "worker is not found")       \
-  F(-3, MANIFEST_ERROR, "worker manifest parse failed")  \
-  F(-5, ENTRY_NOT_FOUND, "worker entry is not found")    \
-  F(-7, ENTRY_READ_ERROR, "worker entry read failed")    \
-  F(-11, RUNTIME_UNKNOWN, "runtime unknown")             \
-  F(-13, RUNTIME_COMPILE_ERROR, "runtime compile error") \
-  F(-21, HTTP_INVALID_RESPONSE, "invalid response")      \
+#define FOREACH_ERROR_STATUS(F)                                  \
+  F(0, OK, "ok")                                                 \
+  F(-1, MANIFEST_NOT_FOUND, "worker is not found")               \
+  F(-3, MANIFEST_ERROR, "worker manifest parse failed")          \
+  F(-5, ENTRY_NOT_FOUND, "worker entry is not found")            \
+  F(-7, ENTRY_READ_ERROR, "worker entry read failed")            \
+  F(-11, RUNTIME_UNKNOWN, "runtime unknown")                     \
+  F(-13, RUNTIME_COMPILE_ERROR, "runtime compile error")         \
+  F(-15, RUNTIME_MISSING_FETCH_HANDLER, "no handler registered") \
+  F(-21, HTTP_INVALID_RESPONSE, "invalid response")              \
   F(-31, V8JS_THREW_EXCEPTION, "v8: js threw exception")
 
 enum {

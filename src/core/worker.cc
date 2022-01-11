@@ -1,6 +1,13 @@
+/*
+ * Copyright (c) 2021 fuxiaohei. All rights reserved.
+ * Licensed under the Apache-2.0 License. See License file in the project root for
+ * license information.
+ */
+
 #include <common/common.h>
 #include <common/json.h>
 #include <core/main_context.h>
+#include <core/request_scope.h>
 #include <core/worker.h>
 #include <hv/hlog.h>
 
@@ -8,8 +15,6 @@
 
 namespace xhworker {
 namespace core {
-
-using namespace xhworker;
 
 Manifest *Worker::ReadManifest(const std::string &dir, const std::string &key) {
   Manifest *manifest = new Manifest();
@@ -115,8 +120,10 @@ int Worker::handle_http_request(const HttpContextPtr &ctx) {
     return HTTP_STATUS_INTERNAL_SERVER_ERROR;
   }
 
-  ctx->setBody("hello worker!");
-  return HTTP_STATUS_OK;
+  auto reqScope = new RequestScope(ctx);
+  auto runContext = runner_->get_context();
+
+  return runContext->handle_http_request(reqScope);
 }
 
 Worker::~Worker() {

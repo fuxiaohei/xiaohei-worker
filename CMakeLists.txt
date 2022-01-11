@@ -46,6 +46,7 @@ configure_file(${CMAKE_SOURCE_DIR}/src/lib/common/version.h.in  ${CMAKE_SOURCE_D
 # add libraries
 add_subdirectory(src/lib/common)
 add_subdirectory(src/lib/v8wrap)
+add_subdirectory(src/lib/webapi)
 add_subdirectory(src/runtime)
 add_subdirectory(src/core)
 

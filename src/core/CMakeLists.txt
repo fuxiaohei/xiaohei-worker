@@ -1,6 +1,7 @@
 add_library(worker_core
     main_context.cc
     container.cc
+    request_scope.cc
     worker.cc
 )
 

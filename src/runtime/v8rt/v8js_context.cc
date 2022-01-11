@@ -6,11 +6,13 @@
 
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <common/common.h>
+#include <hv/hlog.h>
 #include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/isolate.h>
 #include <v8wrap/js_value.h>
 #include <v8wrap/v8wrap.h>
+#include <webapi/global_scope.h>
 
 namespace xhworker {
 namespace runtime {
@@ -62,6 +64,12 @@ V8JsContext *V8JsContext::Create(V8Runtime *rt, const std::string &content,
     return jsContext;
   }
 
+  // check listener registered
+  jsContext->check_handler_registered();
+  if (jsContext->get_error_code() != 0) {
+    return jsContext;
+  }
+
   std::string result_string = v8wrap::get_string(isolate, result);
   jsContext->set_compiled_result(result_string);
   return jsContext;
@@ -69,8 +77,17 @@ V8JsContext *V8JsContext::Create(V8Runtime *rt, const std::string &content,
 
 // -- methods
 
-V8JsContext::V8JsContext(V8Runtime *rt, v8::Local<v8::Context> context) {}
-V8JsContext::~V8JsContext() {}
+V8JsContext::V8JsContext(V8Runtime *rt, v8::Local<v8::Context> context)
+    : runtime_(rt), isolate_(context->GetIsolate()) {
+  global_scope_ = webapi::ServiceWorkerGlobalScope::create();
+  context_.Set(context->GetIsolate(), context);
+
+  v8wrap::set_ptr(context, V8_JS_CONTEXT_JSGLOBAL_INDEX, global_scope_);
+  v8wrap::set_ptr(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX, nullptr);
+  v8wrap::set_ptr(context, V8_JS_CONTEXT_SELF_INDEX, this);
+}
+
+V8JsContext::~V8JsContext() { hlogd("v8js: dispose jsContext, jsCtx:%p", this); }
 
 void V8JsContext::set_exception(const std::string &msg, const std::string &stack) {
   error_code_ = common::ERROR_RUNTIME_COMPILE_ERROR;
@@ -79,6 +96,37 @@ void V8JsContext::set_exception(const std::string &msg, const std::string &stack
 }
 
 void V8JsContext::set_compiled_result(const std::string &result) { compiled_result_ = result; }
+
+void V8JsContext::check_handler_registered() {
+  if (!global_scope_->event_target_->hasListener("fetch")) {
+    error_code_ = common::ERROR_RUNTIME_MISSING_FETCH_HANDLER;
+  }
+}
+
+int V8JsContext::handle_http_request(xhworker::core::RequestScope *reqScope) {
+  printf("v8js: handle http request, reqScope:%p\n", reqScope);
+
+  v8::Isolate::Scope isolate_scope(isolate_);
+  v8::HandleScope handle_scope(isolate_);
+
+  // enter v8::Context
+  auto context = context_.Get(isolate_);
+  v8wrap::set_ptr(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX, reqScope);
+  v8::Context::Scope context_scope(context);
+
+  // create fetch event
+  auto fetchEvent = reqScope->create_fetch_event();
+
+  // dispatch event
+  hlogd("v8js: handle_request, jsCtx:%p, req_scope:%p, fetchEvent:%p", this, reqScope, fetchEvent);
+
+  // dispatch fetch event
+  global_scope_->event_target_->dispatchEvent(fetchEvent);
+
+  return 0;
+}
+
+void V8JsContext::recycle() { runtime_->recycle_context(this); }
 
 }  // namespace runtime
 }  // namespace xhworker

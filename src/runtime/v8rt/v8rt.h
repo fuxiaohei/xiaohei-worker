@@ -40,5 +40,21 @@ class V8Runtime : public Runtime {
   std::queue<RuntimeContext *> context_queue_;
 };
 
+common::Heap *getHeap(v8::Local<v8::Context> context);
+
+template <class T>
+static T *allocObject(v8::Local<v8::Context> context) {
+  auto heapObject = getHeap(context);
+  if (heapObject == nullptr) {
+    return nullptr;
+  }
+  return heapObject->alloc<T>();
+}
+
+template <class T>
+static T *allocObject(v8::Isolate *isolate) {
+  return allocObject<T>(isolate->GetCurrentContext());
+}
+
 }  // namespace runtime
 }  // namespace xhworker

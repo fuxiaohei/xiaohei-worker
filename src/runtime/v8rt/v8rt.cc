@@ -5,10 +5,13 @@
  */
 
 #include <common/common.h>
+#include <core/request_scope.h>
 #include <hv/hlog.h>
 #include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/isolate.h>
+#include <v8wrap/js_value.h>
+#include <webapi/global_scope.h>
 
 namespace xhworker {
 namespace runtime {
@@ -90,6 +93,25 @@ int V8Runtime::compile(const std::string &content, const std::string &origin) {
   hlogd("v8js: create jsContext, iso:%p, jsCtx:%p, queue:%ld, result:%s", isolate_, jsContext,
         context_queue_.size(), jsContext->get_compiled_result().data());
   return 0;
+}
+
+// --- single methods
+
+common::Heap *getHeap(v8::Local<v8::Context> context) {
+  // allocate request scope
+  auto req_scope =
+      v8wrap::get_ptr<xhworker::core::RequestScope>(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX);
+  if (req_scope != nullptr) {
+    return req_scope->heap_;
+  }
+
+  // alloc by global scope
+  auto scope =
+      v8wrap::get_ptr<webapi::ServiceWorkerGlobalScope>(context, V8_JS_CONTEXT_JSGLOBAL_INDEX);
+  if (scope == nullptr) {
+    return nullptr;
+  }
+  return scope->heap_;
 }
 
 }  // namespace runtime

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <core/request_scope.h>
+
 #include <string>
 
 namespace xhworker {
@@ -25,6 +27,11 @@ class RuntimeContext {
  public:
   RuntimeContext() = default;
   virtual ~RuntimeContext() {}
+
+ public:
+  virtual int handle_http_request(xhworker::core::RequestScope *reqscope) = 0;
+  virtual int get_error_code() const = 0;
+  virtual void recycle() = 0;
 };
 
 class Runtime {
@@ -44,4 +51,4 @@ class Runtime {
 };
 
 }  // namespace runtime
-}  // namespace xkworker
+}  // namespace xhworker
