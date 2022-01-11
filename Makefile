@@ -12,6 +12,10 @@ run: build
 	@cp cmd/worker/config.ini ${builddir}/config.ini
 	@cd ${builddir} && ./worker.app $(ARGS)
 
+release:
+	@cmake -B${builddir} -DCMAKE_BUILD_TYPE=Release .
+	@cd ${builddir} && make -j4
+
 clean:
 	@rm -rf ${builddir}
 

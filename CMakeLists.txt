@@ -19,8 +19,20 @@ find_package(Threads REQUIRED)
 
 option(BUILD_V8_RUNTIME "Build v8 runtime" ON)
 
+# debug or release
+if (NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE "Debug")
+endif()
+message("-- CMAKE_BUILD_TYPE : ${CMAKE_BUILD_TYPE}")
+
 # add compile arguments
-add_definitions("-g -DV8_COMPRESS_POINTERS -O0 -fno-rtti")
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_definitions("-DV8_COMPRESS_POINTERS -O3 -fno-rtti")
+    message("-- RELEASE BUILD")
+else()
+    add_definitions("-g -DV8_COMPRESS_POINTERS -O0 -fno-rtti")
+endif()
+
 
 # include headers
 include_directories(${CMAKE_SOURCE_DIR}/src)
