@@ -5,6 +5,7 @@
  */
 
 #include <bindings/v8serviceworker/event/event_listener.h>
+#include <bindings/v8serviceworker/serviceworker.h>
 #include <common/common.h>
 #include <core/request_scope.h>
 #include <hv/hlog.h>
@@ -14,7 +15,6 @@
 namespace v8serviceworker {
 
 void JsEventListener::call(webapi::Event *event) {
-
   auto *reqScope = static_cast<core::RequestScope *>(event->data);
 
   v8::HandleScope handle_scope(isolate);
@@ -23,7 +23,7 @@ void JsEventListener::call(webapi::Event *event) {
 
   // create event object
   v8::Local<v8::Value> event_obj;
-  if (!v8wrap::IsolateData::NewInstance(context, "FetchEvent", &event_obj)) {
+  if (!v8wrap::IsolateData::NewInstance(context, CLASS_FETCH_EVENT, &event_obj)) {
     reqScope->set_error_msg(common::ERROR_V8JS_THREW_EXCEPTION, "FetchEvent is undefined");
     return;
   }

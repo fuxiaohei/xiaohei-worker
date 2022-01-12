@@ -8,7 +8,7 @@
 
 #include <common/heap.h>
 #include <hv/HttpServer.h>
-#include <webapi/fetch_event.h>
+#include <webapi/fetch/fetch_event.h>
 
 namespace core {
 

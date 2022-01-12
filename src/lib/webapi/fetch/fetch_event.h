@@ -23,6 +23,9 @@ class FetchEvent : public Event {
   friend class common::Heap;
   FetchEvent() = default;
   ~FetchEvent() = default;
+
+ private:
+  bool is_cancelled_ = false;
 };
 
 }  // namespace webapi

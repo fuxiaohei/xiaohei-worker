@@ -34,6 +34,8 @@ void RequestScope::set_error_msg(int errcode, const std::string& msg, const std:
   error_code_ = errcode;
   error_msg_ = msg;
   error_stack = stack;
+  hlogw("RequestScope::set_error_msg %p, code:%d, msg:%s, stack:%s", this, errcode, msg.c_str(),
+        stack.c_str());
 }
 
 std::string RequestScope::error_response_body() {

@@ -4,14 +4,14 @@
  * license information.
  */
 
-#include <webapi/fetch_event.h>
+#include <webapi/fetch/fetch_event.h>
 
 namespace webapi {
 
 std::string FetchEvent::getType() const { return "fetch"; }
 
-void FetchEvent::cancel() {}
+void FetchEvent::cancel() { is_cancelled_ = true; }
 
-bool FetchEvent::isCancelled() const { return false; }
+bool FetchEvent::isCancelled() const { return is_cancelled_; }
 
 }  // namespace webapi

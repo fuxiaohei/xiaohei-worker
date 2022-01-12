@@ -4,6 +4,9 @@ add_library(worker_v8serviceworker
     event/event_target.cc
     event/event_listener.cc
     event/fetch_event.cc
+
+    fetch/fetch_response.cc
+    fetch/fetch.cc
 )
 
 target_include_directories(worker_v8serviceworker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
