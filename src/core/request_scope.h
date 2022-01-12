@@ -10,7 +10,6 @@
 #include <hv/HttpServer.h>
 #include <webapi/fetch_event.h>
 
-namespace xhworker {
 namespace core {
 
 class RequestScope {
@@ -30,4 +29,3 @@ class RequestScope {
 };
 
 }  // namespace core
-}  // namespace xhworker

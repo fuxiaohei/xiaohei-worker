@@ -12,7 +12,6 @@
 
 #include <string>
 
-namespace xhworker {
 namespace core {
 
 struct Manifest {
@@ -43,7 +42,7 @@ class Worker : public common::RefCounted {
   int prepare_runtime();
   std::string error_response_body();
 
-  xhworker::runtime::Runtime* runner_ = nullptr;
+  runtime::Runtime* runner_ = nullptr;
 
   int error_code_ = 0;
   std::string error_msg_;
@@ -51,4 +50,3 @@ class Worker : public common::RefCounted {
 };
 
 }  // namespace core
-}  // namespace xhworker

@@ -14,7 +14,6 @@
 #include <v8wrap/v8wrap.h>
 #include <webapi/global_scope.h>
 
-namespace xhworker {
 namespace v8rt {
 
 V8JsContext *V8JsContext::Create(V8Runtime *rt, const std::string &content,
@@ -103,7 +102,7 @@ void V8JsContext::check_handler_registered() {
   }
 }
 
-int V8JsContext::handle_http_request(xhworker::core::RequestScope *reqScope) {
+int V8JsContext::handle_http_request(core::RequestScope *reqScope) {
   printf("v8js: handle http request, reqScope:%p\n", reqScope);
 
   v8::Isolate::Scope isolate_scope(isolate_);
@@ -129,4 +128,3 @@ int V8JsContext::handle_http_request(xhworker::core::RequestScope *reqScope) {
 void V8JsContext::recycle() { runtime_->recycle_context(this); }
 
 }  // namespace v8rt
-}  // namespace xhworker

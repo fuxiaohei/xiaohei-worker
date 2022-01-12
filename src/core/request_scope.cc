@@ -6,7 +6,6 @@
 
 #include <core/request_scope.h>
 
-namespace xhworker {
 namespace core {
 
 RequestScope::RequestScope(const HttpContextPtr& ctx) : ctx_(ctx) {
@@ -22,4 +21,3 @@ webapi::FetchEvent* RequestScope::create_fetch_event() {
 }
 
 }  // namespace core
-}  // namespace xhworker

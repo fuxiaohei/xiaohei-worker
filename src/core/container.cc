@@ -11,7 +11,6 @@
 #include <hv/hlog.h>
 #include <hv/hthread.h>
 
-namespace xhworker {
 namespace core {
 
 #define WORKER_CONTAINER_INDEX 4
@@ -70,4 +69,3 @@ Worker *Container::install_worker(const std::string &key) {
 }
 
 }  // namespace core
-}  // namespace xhworker

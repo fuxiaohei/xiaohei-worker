@@ -13,7 +13,6 @@
 #include <v8wrap/js_value.h>
 #include <webapi/global_scope.h>
 
-namespace xhworker {
 namespace v8rt {
 
 V8Runtime::V8Runtime(const Options &options) {  // create a new isolate
@@ -100,7 +99,7 @@ int V8Runtime::compile(const std::string &content, const std::string &origin) {
 common::Heap *getHeap(v8::Local<v8::Context> context) {
   // allocate request scope
   auto req_scope =
-      v8wrap::get_ptr<xhworker::core::RequestScope>(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX);
+      v8wrap::get_ptr<core::RequestScope>(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX);
   if (req_scope != nullptr) {
     return req_scope->heap_;
   }
@@ -115,4 +114,3 @@ common::Heap *getHeap(v8::Local<v8::Context> context) {
 }
 
 }  // namespace runtime
-}  // namespace xhworker

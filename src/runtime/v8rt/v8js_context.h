@@ -19,19 +19,18 @@ namespace webapi {
 class ServiceWorkerGlobalScope;
 }
 
-namespace xhworker {
 namespace v8rt {
 
 class V8Runtime;
 
-using xhworker::runtime::RuntimeContext;
+using runtime::RuntimeContext;
 
 class V8JsContext : public RuntimeContext {
  public:
   static V8JsContext *Create(V8Runtime *rt, const std::string &content, const std::string &origin);
 
  public:
-  int handle_http_request(xhworker::core::RequestScope *reqscope) override;
+  int handle_http_request(core::RequestScope *reqscope) override;
   int get_error_code() const override { return error_code_; }
   void recycle() override;
 
@@ -66,4 +65,3 @@ class V8JsContext : public RuntimeContext {
 };
 
 }  // namespace v8rt
-}  // namespace xhworker

@@ -17,7 +17,6 @@
 
 #include <cstdlib>
 
-namespace xhworker {
 namespace core {
 
 MainContext::MainContext(int argc, char **argv) {
@@ -179,4 +178,3 @@ int MainContext::pares_config() {
 }
 
 }  // namespace core
-}  // namespace xhworker

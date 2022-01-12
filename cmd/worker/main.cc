@@ -15,5 +15,5 @@ int main(int argc, char **argv) {
   logger_enable_color(hlog, 1);
 
   // init main, use for commandline
-  return xhworker::core::MainContext::Run(argc, argv);
+  return core::MainContext::Run(argc, argv);
 }

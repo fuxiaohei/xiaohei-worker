@@ -59,7 +59,7 @@ static void event_target_js_addEventListener(const v8::FunctionCallbackInfo<v8::
   // create a new JsEventListener
   std::string event_name = v8wrap::to_string(isolate->GetCurrentContext(), args[0]);
 
-  auto listener = xhworker::v8rt::allocObject<JsEventListener>(isolate);
+  auto listener = v8rt::allocObject<JsEventListener>(isolate);
   listener->function.Set(isolate, args[1].As<v8::Function>());
   listener->isolate = isolate;
   eventTarget->addListener(event_name, listener);

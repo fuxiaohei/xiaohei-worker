@@ -13,7 +13,6 @@
 
 #include <filesystem>
 
-namespace xhworker {
 namespace core {
 
 Manifest *Worker::ReadManifest(const std::string &dir, const std::string &key) {
@@ -137,4 +136,3 @@ Worker::~Worker() {
 void Worker::destroy() { delete this; }
 
 }  // namespace core
-}  // namespace xhworker

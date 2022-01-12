@@ -8,7 +8,6 @@
 #include <map>
 #include <string>
 
-namespace xhworker {
 namespace core {
 class Worker;
 
@@ -24,5 +23,5 @@ class Container {
   void terminate_worker(const std::string &key);
   std::map<std::string, Worker *> workers_;
 };
+
 }  // namespace core
-}  // namespace xhworker

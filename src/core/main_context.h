@@ -10,7 +10,6 @@
 
 #include <string>
 
-namespace xhworker {
 namespace core {
 
 class MainContext {
@@ -47,5 +46,3 @@ class MainContext {
 };
 
 }  // namespace core
-
-}  // namespace xhworker

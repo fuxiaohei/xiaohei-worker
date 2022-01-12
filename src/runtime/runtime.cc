@@ -11,7 +11,6 @@
 #include <runtime/v8rt/v8rt.h>
 #endif
 
-namespace xhworker {
 
 namespace runtime {
 
@@ -28,4 +27,3 @@ Runtime *Runtime::create(int rttype, const Options &options) {
 void Runtime::release(Runtime *runtime) {}
 
 }  // namespace runtime
-}  // namespace xhworker

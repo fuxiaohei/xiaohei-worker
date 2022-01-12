@@ -10,7 +10,6 @@
 
 #include <string>
 
-namespace xhworker {
 namespace runtime {
 
 enum {
@@ -29,7 +28,7 @@ class RuntimeContext {
   virtual ~RuntimeContext() {}
 
  public:
-  virtual int handle_http_request(xhworker::core::RequestScope *reqscope) = 0;
+  virtual int handle_http_request(core::RequestScope *reqscope) = 0;
   virtual int get_error_code() const = 0;
   virtual void recycle() = 0;
 };
@@ -51,4 +50,3 @@ class Runtime {
 };
 
 }  // namespace runtime
-}  // namespace xhworker
