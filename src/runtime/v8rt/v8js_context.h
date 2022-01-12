@@ -20,9 +20,11 @@ class ServiceWorkerGlobalScope;
 }
 
 namespace xhworker {
-namespace runtime {
+namespace v8rt {
 
 class V8Runtime;
+
+using xhworker::runtime::RuntimeContext;
 
 class V8JsContext : public RuntimeContext {
  public:
@@ -63,5 +65,5 @@ class V8JsContext : public RuntimeContext {
   webapi::ServiceWorkerGlobalScope *global_scope_ = nullptr;
 };
 
-}  // namespace runtime
+}  // namespace v8rt
 }  // namespace xhworker

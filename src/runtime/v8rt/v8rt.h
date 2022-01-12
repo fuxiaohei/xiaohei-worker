@@ -14,7 +14,11 @@
 #define V8_JS_ISOLATE_MEMORY_LIMIT 128  // in mb
 
 namespace xhworker {
-namespace runtime {
+namespace v8rt {
+
+using xhworker::runtime::Options;
+using xhworker::runtime::Runtime;
+using xhworker::runtime::RuntimeContext;
 
 class V8Runtime : public Runtime {
  public:
@@ -56,5 +60,5 @@ static T *allocObject(v8::Isolate *isolate) {
   return allocObject<T>(isolate->GetCurrentContext());
 }
 
-}  // namespace runtime
+}  // namespace v8rt
 }  // namespace xhworker

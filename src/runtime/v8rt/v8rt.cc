@@ -14,7 +14,7 @@
 #include <webapi/global_scope.h>
 
 namespace xhworker {
-namespace runtime {
+namespace v8rt {
 
 V8Runtime::V8Runtime(const Options &options) {  // create a new isolate
   size_t memory_size = V8_JS_ISOLATE_MEMORY_LIMIT;

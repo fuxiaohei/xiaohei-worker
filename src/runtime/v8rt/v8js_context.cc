@@ -15,7 +15,7 @@
 #include <webapi/global_scope.h>
 
 namespace xhworker {
-namespace runtime {
+namespace v8rt {
 
 V8JsContext *V8JsContext::Create(V8Runtime *rt, const std::string &content,
                                  const std::string &origin) {
@@ -128,5 +128,5 @@ int V8JsContext::handle_http_request(xhworker::core::RequestScope *reqScope) {
 
 void V8JsContext::recycle() { runtime_->recycle_context(this); }
 
-}  // namespace runtime
+}  // namespace v8rt
 }  // namespace xhworker

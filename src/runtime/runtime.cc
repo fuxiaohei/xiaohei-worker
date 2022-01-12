@@ -18,7 +18,7 @@ namespace runtime {
 Runtime *Runtime::create(int rttype, const Options &options) {
 #if BUILD_V8_RUNTIME
   if (rttype == RT_JS_V8) {
-    return new V8Runtime(options);
+    return new v8rt::V8Runtime(options);
   }
 #endif
 
@@ -29,4 +29,3 @@ void Runtime::release(Runtime *runtime) {}
 
 }  // namespace runtime
 }  // namespace xhworker
-
