@@ -12,6 +12,7 @@
 #define CLASS_WORKER_GLOBAL_SCOPE "WorkerGlobalScope"
 
 #define CLASS_EVENT_TARGET "EventTarget"
+#define CLASS_FETCH_EVENT "FetchEvent"
 
 namespace v8serviceworker {
 

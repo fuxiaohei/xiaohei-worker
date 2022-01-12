@@ -58,6 +58,19 @@ IsolateData *IsolateData::Get(v8::Isolate *isolate) {
   return static_cast<IsolateData *>(isolate->GetData(V8WRAP_ISOLATE_DATA_INDEX));
 }
 
+bool IsolateData::NewInstance(v8::Local<v8::Context> context, const std::string &name,
+                              v8::Local<v8::Value> *out) {
+  auto isolateData = Get(context->GetIsolate());
+  if (isolateData == nullptr) {
+    return false;
+  }
+  auto class_template = isolateData->getClassTemplate(name);
+  if (class_template.IsEmpty()) {
+    return false;
+  }
+  return class_template->InstanceTemplate()->NewInstance(context).ToLocal(out);
+}
+
 bool IsolateData::IsInstanceOf(v8::Local<v8::Context> context, v8::Local<v8::Value> value,
                                const std::string &name) {
   auto isolateData = Get(context->GetIsolate());

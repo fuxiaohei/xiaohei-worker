@@ -122,7 +122,10 @@ int V8JsContext::handle_http_request(core::RequestScope *reqScope) {
   // dispatch fetch event
   global_scope_->event_target_->dispatchEvent(fetchEvent);
 
-  return 0;
+  // handle response,
+  // if response is not promise, it sends response to client
+  // if response is promise, it waits for response and return 0
+  return reqScope->handle_response();
 }
 
 void V8JsContext::recycle() { runtime_->recycle_context(this); }

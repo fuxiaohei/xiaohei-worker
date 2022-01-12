@@ -50,8 +50,12 @@ class IsolateData {
   static void Register(v8::Isolate *isolate);
   static void Release(v8::Isolate *isolate);
   static IsolateData *Get(v8::Isolate *isolate);
+
   static bool IsInstanceOf(v8::Local<v8::Context> context, v8::Local<v8::Value> value,
                            const std::string &name);
+
+  static bool NewInstance(v8::Local<v8::Context> context, const std::string &name,
+                          v8::Local<v8::Value> *out);
 
  public:
   void setClassTemplate(const std::string &name, v8::Local<v8::FunctionTemplate> fnTpl);

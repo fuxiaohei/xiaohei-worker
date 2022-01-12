@@ -122,7 +122,11 @@ int Worker::handle_http_request(const HttpContextPtr &ctx) {
   auto reqScope = new RequestScope(ctx);
   auto runContext = runner_->get_context();
 
-  return runContext->handle_http_request(reqScope);
+  auto respStatus = runContext->handle_http_request(reqScope);
+  if (respStatus != 0) {
+    reqScope->destroy();
+  }
+  return respStatus;
 }
 
 Worker::~Worker() {
