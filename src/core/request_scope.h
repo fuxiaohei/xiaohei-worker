@@ -58,8 +58,8 @@ class RequestScope {
   std::string error_msg_;
   std::string error_stack;
 
-  int response_status_code_ = HTTP_STATUS_OK;
-  std::atomic<bool> is_response_sent_;
+  int response_status_code_ = 0;
+  std::atomic<bool> is_response_sent_ = {false};
   webapi::FetchResponse* response_ = nullptr;
 
   runtime::RuntimeContext* runtime_context_ = nullptr;

@@ -56,10 +56,11 @@ void V8FetchContext::do_request() {
   async_client_.sendAsync(req_, [this](const HttpResponsePtr &resp) {
     if (resp == nullptr) {
       // FIXME:: set error ?
+      return;
     }
     resp_ = resp;
 
-    printf("v8js_fetch: send_async_once: %d, resp: %p\n", fetchReqID_, resp.get());
+    hlogd("v8js_fetch: send_async_once: response, id: %d, resp: %p", fetchReqID_, resp.get());
 
     // make sure isolate is used in same thread,
     // it need notify http request thread to handle fetch response to fulfill promise.

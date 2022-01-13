@@ -40,12 +40,15 @@ void JsEventListener::call(webapi::Event *event) {
     v8wrap::get_exception(context, &try_catch, &error, &stack);
     reqScope->set_error_msg(common::ERROR_V8JS_THREW_EXCEPTION, error, stack);
 
-    hlogd("v8js: call js function error:%s, stack:%s", error.c_str(), stack.c_str());
+    hlogd("JsEventListener: call js function error:%s, stack:%s", error.c_str(), stack.c_str());
     return;
   }
 
+  hlogd("JsEventListener: call js function success");
+
   // handle run result
   if (maybe_value.IsEmpty()) {
+    hlogd("JsEventListener: call js function result is empty");
     return;
   }
 
@@ -62,12 +65,14 @@ void JsEventListener::call(webapi::Event *event) {
     if (promise->State() == v8::Promise::kRejected) {
       std::string errmsg = v8wrap::to_string(context, promise->Result());
       reqScope->set_error_msg(common::ERROR_V8JS_THREW_EXCEPTION, errmsg);
+      hlogd("JsEventListener: call js function result is rejected:%s", errmsg.c_str());
       return;
     }
 
     // force to run microtask once
     if (promise->State() == v8::Promise::kPending) {
       isolate->PerformMicrotaskCheckpoint();
+      hlogd("JsEventListener: call js function result is pending");
     }
   }
 }

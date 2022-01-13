@@ -62,11 +62,15 @@ std::string RequestScope::error_response_body() {
 
 int RequestScope::handle_response() {
   if (is_response_sent_.load()) {
+    hlogw("RequestScope::handle_response %p, response already sent", this);
     return response_status_code_;
   }
 
   if (error_code_ != 0) {
     is_response_sent_.store(true);
+    hlogw("RequestScope::handle_response %p, error:%d, msg:%s", this, error_code_,
+          error_msg_.c_str());
+
     ctx_->setBody(error_response_body());
     response_status_code_ = HTTP_STATUS_INTERNAL_SERVER_ERROR;
     return response_status_code_;
@@ -74,6 +78,8 @@ int RequestScope::handle_response() {
 
   if (response_ != nullptr) {
     is_response_sent_.store(true);
+    hlogd("RequestScope::handle_response %p, response:%p", this, response_);
+
     response_status_code_ = response_->getRawResponse()->status_code;
     ctx_->writer->Begin();
     ctx_->writer->WriteResponse(response_->getRawResponse());
@@ -105,6 +111,11 @@ void RequestScope::handle_waitings() {
     }
   } else {
     hlogd("RequestScope::handle_waitings %p, response is sent", this);
+  }
+
+  if (is_response_sent_.load()) {
+    hlogd("RequestScope::handle_waitings %p, response is done", this);
+    destroy();
   }
 }
 

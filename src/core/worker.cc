@@ -124,8 +124,10 @@ int Worker::handle_http_request(const HttpContextPtr &ctx) {
 
   auto respStatus = runContext->handle_http_request(reqScope);
   if (respStatus != 0) {
+    hlogd("worker: handle http request, worker:%p, status:%d", this, respStatus);
     reqScope->destroy();
   } else {
+    hlogd("worker: handle http request, waitings, worker:%p, status:%d", this, respStatus);
     reqScope->set_runtime_context(runContext);
     reqScope->handle_waitings();
   }

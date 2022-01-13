@@ -68,6 +68,7 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
   }
   auto response = v8wrap::get_ptr<webapi::FetchResponse>(args[0].As<v8::Object>());
   reqScope->set_response(response);
+  hlogd("fetch_event_js_respondWith save response, response:%p", response);
 }
 
 static void fetch_event_js_waitUntil(const v8::FunctionCallbackInfo<v8::Value> &args) {}
