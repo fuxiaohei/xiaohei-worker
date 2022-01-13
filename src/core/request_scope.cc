@@ -61,8 +61,17 @@ int RequestScope::handle_response() {
     response_status_code_ = HTTP_STATUS_INTERNAL_SERVER_ERROR;
     return response_status_code_;
   }
-  ctx_->setBody("all is ok");
-  return response_status_code_;
+
+  if (response_ != nullptr) {
+    is_response_sent_.store(true);
+    response_status_code_ = response_->getRawResponse()->status_code;
+    ctx_->writer->Begin();
+    ctx_->writer->WriteResponse(response_->getRawResponse());
+    ctx_->writer->End();
+    return response_status_code_;
+  }
+  
+  return 0;
 }
 
 }  // namespace core

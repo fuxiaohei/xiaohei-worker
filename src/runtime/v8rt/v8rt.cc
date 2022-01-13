@@ -5,7 +5,6 @@
  */
 
 #include <common/common.h>
-#include <core/request_scope.h>
 #include <hv/hlog.h>
 #include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
@@ -98,10 +97,9 @@ int V8Runtime::compile(const std::string &content, const std::string &origin) {
 
 common::Heap *getHeap(v8::Local<v8::Context> context) {
   // allocate request scope
-  auto req_scope =
-      v8wrap::get_ptr<core::RequestScope>(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX);
-  if (req_scope != nullptr) {
-    return req_scope->heap_;
+  auto reqScope = getRequestScope(context);
+  if (reqScope != nullptr) {
+    return reqScope->heap_;
   }
 
   // alloc by global scope
@@ -113,4 +111,8 @@ common::Heap *getHeap(v8::Local<v8::Context> context) {
   return scope->heap_;
 }
 
-}  // namespace runtime
+core::RequestScope *getRequestScope(v8::Local<v8::Context> context) {
+  return v8wrap::get_ptr<core::RequestScope>(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX);
+}
+
+}  // namespace v8rt

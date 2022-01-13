@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <core/request_scope.h>
 #include <runtime/runtime.h>
 #include <v8.h>
 
@@ -44,6 +45,8 @@ class V8Runtime : public Runtime {
 };
 
 common::Heap *getHeap(v8::Local<v8::Context> context);
+
+core::RequestScope *getRequestScope(v8::Local<v8::Context> context);
 
 template <class T>
 static T *allocObject(v8::Local<v8::Context> context) {
