@@ -5,6 +5,7 @@ add_library(worker_v8serviceworker
     event/event_listener.cc
     event/fetch_event.cc
 
+    fetch/fetch_request.cc
     fetch/fetch_response.cc
     fetch/fetch.cc
 )

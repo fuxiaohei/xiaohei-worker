@@ -9,6 +9,7 @@
 #include <common/heap.h>
 #include <hv/HttpServer.h>
 #include <webapi/fetch/fetch_event.h>
+#include <webapi/fetch/fetch_request.h>
 #include <webapi/fetch/fetch_response.h>
 
 namespace core {
@@ -16,6 +17,7 @@ namespace core {
 class RequestScope {
  public:
   webapi::FetchEvent* create_fetch_event();
+  webapi::FetchRequest* create_fetch_request();
 
   void set_response(webapi::FetchResponse* response) { response_ = response; }
 
@@ -24,7 +26,7 @@ class RequestScope {
 
   int handle_response();
 
-  void destroy();
+  int destroy();
 
  public:
   common::Heap* heap_ = nullptr;

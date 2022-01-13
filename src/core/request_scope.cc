@@ -14,9 +14,10 @@ RequestScope::RequestScope(const HttpContextPtr& ctx) : ctx_(ctx) {
   heap_ = common::Heap::Create();
 }
 
-void RequestScope::destroy() {
-  hlogw("RequestScope::destroy %p", this);
+int RequestScope::destroy() {
+  hlogi("RequestScope::destroy %p", this);
   delete this;
+  return 0;
 }
 
 RequestScope::~RequestScope() {
@@ -28,6 +29,12 @@ webapi::FetchEvent* RequestScope::create_fetch_event() {
   auto fetchEvent = heap_->alloc<webapi::FetchEvent>();
   fetchEvent->data = this;
   return fetchEvent;
+}
+
+webapi::FetchRequest* RequestScope::create_fetch_request() {
+  auto fetchRequest = heap_->alloc<webapi::FetchRequest>();
+  fetchRequest->set_request(ctx_->request.get());
+  return fetchRequest;
 }
 
 void RequestScope::set_error_msg(int errcode, const std::string& msg, const std::string& stack) {
@@ -70,7 +77,7 @@ int RequestScope::handle_response() {
     ctx_->writer->End();
     return response_status_code_;
   }
-  
+
   return 0;
 }
 

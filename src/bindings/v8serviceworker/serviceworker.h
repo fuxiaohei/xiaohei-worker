@@ -13,6 +13,7 @@
 
 #define CLASS_EVENT_TARGET "EventTarget"
 #define CLASS_FETCH_EVENT "FetchEvent"
+#define CLASS_FETCH_REQUEST "Request"
 #define CLASS_FETCH_RESPONSE "Response"
 
 namespace v8serviceworker {

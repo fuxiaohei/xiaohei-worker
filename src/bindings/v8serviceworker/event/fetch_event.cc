@@ -1,5 +1,6 @@
 #include <bindings/v8serviceworker/event/fetch_event.h>
 #include <bindings/v8serviceworker/serviceworker.h>
+#include <common/common.h>
 #include <hv/hlog.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/isolate.h>
@@ -28,8 +29,28 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
 
   if (args[0]->IsPromise()) {
     isolate->PerformMicrotaskCheckpoint();
+    hlogw("fetch_event_js_respondWith check promise, reqScope:%p", reqScope);
 
-    // TODO: handle promise
+    auto promise = args[0].As<v8::Promise>();
+    if (promise->State() == v8::Promise::kFulfilled) {
+      auto value = promise->Result();
+      if (!v8wrap::IsolateData::IsInstanceOf(context, value, CLASS_FETCH_RESPONSE)) {
+        v8wrap::throw_type_error(isolate, "respondWith: argument must be a Response");
+        return;
+      }
+      auto response = v8wrap::get_ptr<webapi::FetchResponse>(value.As<v8::Object>());
+      reqScope->set_response(response);
+      return;
+    }
+    if (promise->State() == v8::Promise::kRejected) {
+      auto value = promise->Result();
+      std::string errormsg = v8wrap::to_string(context, value);
+      reqScope->set_error_msg(common::ERROR_V8JS_THREW_EXCEPTION, errormsg);
+      return;
+    }
+
+    isolate->PerformMicrotaskCheckpoint();
+    hlogw("fetch_event_js_respondWith save promise, reqScope:%p", reqScope);
     return;
   }
 
@@ -43,7 +64,28 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
 
 static void fetch_event_js_waitUntil(const v8::FunctionCallbackInfo<v8::Value> &args) {}
 
-static void fetch_event_js_request_getter(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void fetch_event_js_request_getter(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  auto *isolate = args.GetIsolate();
+  auto context = isolate->GetCurrentContext();
+
+  // get request scope
+  auto reqScope = v8rt::getRequestScope(context);
+  if (reqScope == nullptr) {
+    v8wrap::throw_type_error(isolate, "event.request: request scope is null");
+    return;
+  }
+
+  v8::Local<v8::Value> requestObject;
+  if (!v8wrap::IsolateData::NewInstance(context, CLASS_FETCH_REQUEST, &requestObject)) {
+    v8wrap::throw_type_error(isolate, "event.request: failed to create request object");
+    return;
+  }
+
+  auto fetchRequest = reqScope->create_fetch_request();
+  v8wrap::set_ptr(requestObject.As<v8::Object>(), fetchRequest);
+
+  args.GetReturnValue().Set(requestObject);
+}
 
 void register_fetch_event(v8wrap::IsolateData *isolateData, v8wrap::ClassBuilder *classBuider) {
   auto isolate = isolateData->get_isolate();
