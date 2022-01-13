@@ -130,4 +130,21 @@ int V8JsContext::handle_http_request(core::RequestScope *reqScope) {
 
 void V8JsContext::recycle() { runtime_->recycle_context(this); }
 
+void V8JsContext::save_response_promise(v8::Local<v8::Promise> promise) {
+  respose_promise_.Set(isolate_, promise);
+}
+
+webapi::FetchResponse *V8JsContext::get_promised_respose() {
+  if (respose_promise_.IsEmpty()) {
+    hlogd("v8js: get_promised_respose, jsCtx:%p, promised_respose is empty", this);
+    return nullptr;
+  }
+  auto promise = respose_promise_.Get(isolate_);
+  if (promise->State() == v8::Promise::kFulfilled) {
+    return v8wrap::get_ptr<webapi::FetchResponse>(promise->Result().As<v8::Object>());
+  }
+  // FIXME: rejected?
+  return nullptr;
+}
+
 }  // namespace v8rt

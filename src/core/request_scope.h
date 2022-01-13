@@ -12,6 +12,10 @@
 #include <webapi/fetch/fetch_request.h>
 #include <webapi/fetch/fetch_response.h>
 
+namespace runtime {
+class RuntimeContext;
+}
+
 namespace core {
 
 class RequestScope {
@@ -25,6 +29,11 @@ class RequestScope {
   bool is_error() const { return error_code_ != 0; }
 
   int handle_response();
+  void handle_waitings();
+
+  void set_runtime_context(runtime::RuntimeContext* context) { runtime_context_ = context; }
+
+  void append_fetch_request(int id);
 
   int destroy();
 
@@ -39,6 +48,9 @@ class RequestScope {
  private:
   std::string error_response_body();
 
+  void do_fetch_requests();
+  void terminate_fetch_requests();
+
  private:
   HttpContextPtr ctx_;
 
@@ -49,6 +61,10 @@ class RequestScope {
   int response_status_code_ = HTTP_STATUS_OK;
   std::atomic<bool> is_response_sent_;
   webapi::FetchResponse* response_ = nullptr;
+
+  runtime::RuntimeContext* runtime_context_ = nullptr;
+
+  std::vector<int> fetch_id_list;
 };
 
 }  // namespace core

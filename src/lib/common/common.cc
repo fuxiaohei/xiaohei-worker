@@ -9,15 +9,20 @@
 namespace common {
 
 const char *error_message(int err) {
-    switch (err) {
-#define F(errcode, name, errmsg)                                                                   \
-    case errcode:                                                                                  \
-        return errmsg;
-        FOREACH_ERROR_STATUS(F)
+  switch (err) {
+#define F(errcode, name, errmsg) \
+  case errcode:                  \
+    return errmsg;
+    FOREACH_ERROR_STATUS(F)
 #undef F
     default:
-        return "undefined error";
-    }
+      return "undefined error";
+  }
+}
+
+int create_id() {
+  static std::atomic<int> id{1};
+  return id.fetch_add(1, std::memory_order_relaxed);
 }
 
 }  // namespace common

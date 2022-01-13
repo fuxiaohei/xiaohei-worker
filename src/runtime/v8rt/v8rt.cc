@@ -115,4 +115,8 @@ core::RequestScope *getRequestScope(v8::Local<v8::Context> context) {
   return v8wrap::get_ptr<core::RequestScope>(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX);
 }
 
+V8JsContext *getJsContext(v8::Local<v8::Context> context) {
+  return v8wrap::get_ptr<V8JsContext>(context, V8_JS_CONTEXT_SELF_INDEX);
+}
+
 }  // namespace v8rt

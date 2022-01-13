@@ -125,6 +125,9 @@ int Worker::handle_http_request(const HttpContextPtr &ctx) {
   auto respStatus = runContext->handle_http_request(reqScope);
   if (respStatus != 0) {
     reqScope->destroy();
+  } else {
+    reqScope->set_runtime_context(runContext);
+    reqScope->handle_waitings();
   }
   return respStatus;
 }

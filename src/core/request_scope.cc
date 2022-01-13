@@ -7,6 +7,7 @@
 #include <common/common.h>
 #include <core/request_scope.h>
 #include <hv/hlog.h>
+#include <runtime/fetch_backend.h>
 
 namespace core {
 
@@ -21,6 +22,8 @@ int RequestScope::destroy() {
 }
 
 RequestScope::~RequestScope() {
+  terminate_fetch_requests();
+
   heap_->free();
   heap_ = nullptr;
 }
@@ -79,6 +82,44 @@ int RequestScope::handle_response() {
   }
 
   return 0;
+}
+
+void RequestScope::handle_waitings() {
+  do_fetch_requests();
+
+  // if response is not sent, need get response from promise maybe
+  if (!is_response_sent_.load()) {
+    hlogd("RequestScope::handle_waitings %p, response is not sent", this);
+    if (runtime_context_) {
+      auto response = runtime_context_->get_promised_respose();
+      if (response != nullptr) {
+        response_ = response;
+        hlogd("RequestScope::handle_waitings %p, get response from promise", this);
+        handle_response();
+      }
+    }
+    if (!is_response_sent_.load() && error_code_ != 0) {
+      hlogd("RequestScope::handle_waitings %p, error_code_ != 0, error_msg_:%s", this,
+            error_msg_.c_str());
+      handle_response();
+    }
+  } else {
+    hlogd("RequestScope::handle_waitings %p, response is sent", this);
+  }
+}
+
+void RequestScope::append_fetch_request(int id) { fetch_id_list.push_back(id); }
+
+void RequestScope::do_fetch_requests() {
+  for (auto id : fetch_id_list) {
+    runtime::FetchBackend::Call(id);
+  }
+}
+
+void RequestScope::terminate_fetch_requests() {
+  for (auto id : fetch_id_list) {
+    runtime::FetchBackend::Termiate(id);
+  }
 }
 
 }  // namespace core

@@ -30,6 +30,8 @@ enum {
 
 const char *error_message(int err);
 
+int create_id();
+
 class RefCounted {
  public:
   void retain() { ref_count_++; }

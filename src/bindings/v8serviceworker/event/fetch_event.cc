@@ -2,6 +2,7 @@
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <common/common.h>
 #include <hv/hlog.h>
+#include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/isolate.h>
 #include <v8wrap/js_value.h>
@@ -51,6 +52,13 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
 
     isolate->PerformMicrotaskCheckpoint();
     hlogw("fetch_event_js_respondWith save promise, reqScope:%p", reqScope);
+
+    auto jsContext = v8rt::getJsContext(context);
+    if (jsContext == nullptr) {
+      reqScope->set_error_msg(common::ERROR_V8JS_THREW_EXCEPTION, "invalid request context");
+      return;
+    }
+    jsContext->save_response_promise(promise);
     return;
   }
 

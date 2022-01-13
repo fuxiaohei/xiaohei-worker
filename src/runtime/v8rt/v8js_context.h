@@ -8,6 +8,7 @@
 
 #include <runtime/runtime.h>
 #include <v8.h>
+#include <webapi/fetch/fetch_response.h>
 
 #include <string>
 
@@ -33,12 +34,15 @@ class V8JsContext : public RuntimeContext {
   int handle_http_request(core::RequestScope *reqscope) override;
   int get_error_code() const override { return error_code_; }
   void recycle() override;
+  webapi::FetchResponse *get_promised_respose() override;
 
  public:
   std::string get_compiled_result() const { return compiled_result_; }
 
   void set_compiled_result(const std::string &result);
   void set_exception(const std::string &msg, const std::string &stack);
+
+  void save_response_promise(v8::Local<v8::Promise> promise);
 
  private:
   friend class V8Runtime;
@@ -58,6 +62,7 @@ class V8JsContext : public RuntimeContext {
 
   v8::Isolate *isolate_ = nullptr;
   v8::Eternal<v8::Context> context_;
+  v8::Eternal<v8::Promise> respose_promise_;
 
   V8Runtime *runtime_ = nullptr;
 

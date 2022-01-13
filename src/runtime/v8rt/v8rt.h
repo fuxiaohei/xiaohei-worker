@@ -20,6 +20,8 @@ using runtime::Options;
 using runtime::Runtime;
 using runtime::RuntimeContext;
 
+class V8JsContext;
+
 class V8Runtime : public Runtime {
  public:
   RuntimeContext *get_context();
@@ -47,6 +49,8 @@ class V8Runtime : public Runtime {
 common::Heap *getHeap(v8::Local<v8::Context> context);
 
 core::RequestScope *getRequestScope(v8::Local<v8::Context> context);
+
+V8JsContext *getJsContext(v8::Local<v8::Context> context);
 
 template <class T>
 static T *allocObject(v8::Local<v8::Context> context) {

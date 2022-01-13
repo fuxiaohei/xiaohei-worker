@@ -10,6 +10,10 @@
 
 #include <string>
 
+namespace webapi {
+class FetchResponse;
+}
+
 namespace runtime {
 
 enum {
@@ -22,6 +26,19 @@ struct Options {
   int cpu_time = 0;
 };
 
+class FetchContext {
+ public:
+  FetchContext() = default;
+  virtual ~FetchContext() {}
+
+ public:
+  virtual int get_id() = 0;
+  virtual void set_url(const std::string &url) = 0;
+  virtual void do_request() = 0;
+  virtual bool is_do_requested() = 0;
+  virtual void terminate() = 0;
+};
+
 class RuntimeContext {
  public:
   RuntimeContext() = default;
@@ -31,6 +48,7 @@ class RuntimeContext {
   virtual int handle_http_request(core::RequestScope *reqscope) = 0;
   virtual int get_error_code() const = 0;
   virtual void recycle() = 0;
+  virtual webapi::FetchResponse *get_promised_respose() = 0;
 };
 
 class Runtime {
