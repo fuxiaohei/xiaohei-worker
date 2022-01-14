@@ -12,7 +12,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.h.in  ${CMAKE_CURRENT_SOURCE_DIR
 
 add_library(worker_runtime
     runtime.cc
-    fetch_backend.cc
     ${v8rt_src_files}
 )
 

@@ -24,7 +24,6 @@ class V8FetchContext : public runtime::FetchContext, common::RefCounted {
   }
 
  public:
-  int get_id() override { return fetchReqID_; }
   void set_url(const std::string& url) override;
   void do_request() override;
   bool is_do_requested() override { return is_sent_.load(); }
@@ -40,7 +39,6 @@ class V8FetchContext : public runtime::FetchContext, common::RefCounted {
   void fulfill_promise();
 
  private:
-  int fetchReqID_ = -1;
   core::RequestScope* reqScope_ = nullptr;
 
   v8::Isolate* isolate_ = nullptr;

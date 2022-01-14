@@ -14,7 +14,8 @@
 
 namespace runtime {
 class RuntimeContext;
-}
+class FetchContext;
+}  // namespace runtime
 
 namespace core {
 
@@ -33,7 +34,7 @@ class RequestScope {
 
   void set_runtime_context(runtime::RuntimeContext* context) { runtime_context_ = context; }
 
-  void append_fetch_request(int id);
+  void save_fetch_request(runtime::FetchContext* fetchContext);
 
   int destroy();
 
@@ -64,7 +65,7 @@ class RequestScope {
 
   runtime::RuntimeContext* runtime_context_ = nullptr;
 
-  std::vector<int> fetch_id_list;
+  std::vector<runtime::FetchContext*> fetch_requests_;
 };
 
 }  // namespace core

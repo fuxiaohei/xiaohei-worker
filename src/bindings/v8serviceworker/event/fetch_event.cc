@@ -30,7 +30,7 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
 
   if (args[0]->IsPromise()) {
     isolate->PerformMicrotaskCheckpoint();
-    hlogw("fetch_event_js_respondWith check promise, reqScope:%p", reqScope);
+    hlogi("fetch_event_js_respondWith check promise, reqScope:%p", reqScope);
 
     auto promise = args[0].As<v8::Promise>();
     if (promise->State() == v8::Promise::kFulfilled) {
@@ -51,11 +51,12 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
     }
 
     isolate->PerformMicrotaskCheckpoint();
-    hlogw("fetch_event_js_respondWith save promise, reqScope:%p", reqScope);
+    hlogi("fetch_event_js_respondWith save promise, reqScope:%p", reqScope);
 
     auto jsContext = v8rt::getJsContext(context);
     if (jsContext == nullptr) {
       reqScope->set_error_msg(common::ERROR_V8JS_THREW_EXCEPTION, "invalid request context");
+      hlogi("fetch_event_js_respondWith invalid request context, reqScope:%p", reqScope);
       return;
     }
     jsContext->save_response_promise(promise);
@@ -68,7 +69,7 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
   }
   auto response = v8wrap::get_ptr<webapi::FetchResponse>(args[0].As<v8::Object>());
   reqScope->set_response(response);
-  hlogd("fetch_event_js_respondWith save response, response:%p", response);
+  hlogi("fetch_event_js_respondWith save response, response:%p, reqScope:%p", response, reqScope);
 }
 
 static void fetch_event_js_waitUntil(const v8::FunctionCallbackInfo<v8::Value> &args) {}

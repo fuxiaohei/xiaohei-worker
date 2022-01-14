@@ -7,7 +7,7 @@
 #include <common/common.h>
 #include <core/request_scope.h>
 #include <hv/hlog.h>
-#include <runtime/fetch_backend.h>
+#include <runtime/runtime.h>
 
 namespace core {
 
@@ -119,17 +119,21 @@ void RequestScope::handle_waitings() {
   }
 }
 
-void RequestScope::append_fetch_request(int id) { fetch_id_list.push_back(id); }
+void RequestScope::save_fetch_request(runtime::FetchContext* fetchContext) {
+  fetch_requests_.push_back(fetchContext);
+}
 
 void RequestScope::do_fetch_requests() {
-  for (auto id : fetch_id_list) {
-    runtime::FetchBackend::Call(id);
+  for (auto fetchCtx : fetch_requests_) {
+    if (!fetchCtx->is_do_requested()) {
+      fetchCtx->do_request();
+    }
   }
 }
 
 void RequestScope::terminate_fetch_requests() {
-  for (auto id : fetch_id_list) {
-    runtime::FetchBackend::Termiate(id);
+  for (auto fetchCtx : fetch_requests_) {
+    fetchCtx->terminate();
   }
 }
 

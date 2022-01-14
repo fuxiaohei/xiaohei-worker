@@ -32,7 +32,6 @@ class FetchContext {
   virtual ~FetchContext() {}
 
  public:
-  virtual int get_id() = 0;
   virtual void set_url(const std::string &url) = 0;
   virtual void do_request() = 0;
   virtual bool is_do_requested() = 0;

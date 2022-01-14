@@ -6,7 +6,6 @@
 
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <common/common.h>
-#include <runtime/fetch_backend.h>
 #include <runtime/v8rt/v8js_fetch.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8.h>
@@ -21,9 +20,7 @@ V8FetchContext::V8FetchContext(core::RequestScope *req_scope,
     : reqScope_(req_scope) {
   retain();
 
-  fetchReqID_ = common::create_id();
-  runtime::FetchBackend::Save(fetchReqID_, this);
-  reqScope_->append_fetch_request(fetchReqID_);
+  reqScope_->save_fetch_request(this);
 
   isolate_ = resolver->GetIsolate();
   context_.Set(isolate_, isolate_->GetCurrentContext());
@@ -38,14 +35,14 @@ V8FetchContext::V8FetchContext(core::RequestScope *req_scope,
   req_->method = HTTP_GET;
   req_->timeout = 10;
 
-  hlogd("v8js_fetch: created, id: %d, refCount:%d", fetchReqID_, get_ref_count());
+  hlogi("v8js_fetch: created, thisptr:%p, req_scope:%p", this, reqScope_);
 }
 
 void V8FetchContext::set_url(const std::string &url) { req_->url = url; }
 
 void V8FetchContext::do_request() {
   if (is_sent_.load()) {
-    hlogd("v8js_fetch: send_async_once: already send, id: %d", fetchReqID_);
+    hlogd("v8js_fetch: already sent, thisptr:%p, req_scope:%p", this, reqScope_);
     return;
   }
   is_sent_.store(true);
@@ -64,8 +61,8 @@ void V8FetchContext::do_request() {
     }
     resp_ = resp;
 
-    hlogd("v8js_fetch: send_async_once: response, id: %d, resp: %p, refCount:%d", fetchReqID_,
-          resp.get(), get_ref_count());
+    hlogd("v8js_fetch: request done, thisptr:%p, req_scope:%p, resp:%p", this, reqScope_,
+          resp.get());
 
     // make sure isolate is used in same thread,
     // it need notify http request thread to handle fetch response to fulfill promise.
@@ -73,10 +70,13 @@ void V8FetchContext::do_request() {
   });
 }
 
-void V8FetchContext::terminate() { release(); }
+void V8FetchContext::terminate() {
+  hlogd("v8js_fetch: terminate, thisptr:%p, req_scope:%p", this, reqScope_);
+  release();
+}
 
 void V8FetchContext::destroy() {
-  hlogd("v8js_fetch: destroy, id: %d, refCount:%d", fetchReqID_, get_ref_count());
+  hlogd("v8js_fetch: destroy, thisptr:%p, req_scope:%p", this, reqScope_);
   delete this;
 }
 
@@ -86,7 +86,7 @@ void V8FetchContext::notify_request_done() {
     return;
   }
 
-  hlogd("v8js_fetch: notify_request_done, id: %d", fetchReqID_);
+  hlogd("v8js_fetch: notify_request_done, thisptr:%p, req_scope:%p", this, reqScope_);
   mainloop_->queueInLoop(std::bind(&V8FetchContext::fulfill_promise, this));
 }
 
@@ -103,7 +103,8 @@ void V8FetchContext::fulfill_promise() {
   if (!v8wrap::IsolateData::NewInstance(context, CLASS_FETCH_RESPONSE, &response_obj)) {
     resolver->Reject(context, v8wrap::new_type_error(isolate_, "failed to create Response object"))
         .Check();
-    hlogw("v8js_fetch: failed to create Response object, id: %d", fetchReqID_);
+    hlogi("v8js_fetch: failed to create Response object, thisptr:%p, req_scope:%p", this,
+          reqScope_);
   } else {
     // set response
     auto response = allocObject<webapi::FetchResponse>(context);
@@ -111,8 +112,7 @@ void V8FetchContext::fulfill_promise() {
     v8wrap::set_ptr(response_obj.As<v8::Object>(), response);
     // fullfil response
     resolver->Resolve(context, response_obj).Check();
-    hlogi("v8js_fetch: fulfill_promise: done, id: %d, resp: %p, refCount:%d", fetchReqID_,
-          resp_.get(), get_ref_count());
+    hlogi("v8js_fetch: fulfill_promise: done, thisptr:%p, req_scope:%p", this, reqScope_);
   }
 
   // request scope all waitings
