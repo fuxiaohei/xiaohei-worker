@@ -12,6 +12,9 @@
 #include <webapi/fetch/fetch_request.h>
 #include <webapi/fetch/fetch_response.h>
 
+#include <string>
+#include <vector>
+
 namespace runtime {
 class RuntimeContext;
 class FetchContext;

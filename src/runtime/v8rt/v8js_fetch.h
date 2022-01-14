@@ -14,6 +14,8 @@
 #include <runtime/runtime.h>
 #include <v8.h>
 
+#include <string>
+
 namespace v8rt {
 
 class V8FetchContext : public runtime::FetchContext, common::RefCounted {

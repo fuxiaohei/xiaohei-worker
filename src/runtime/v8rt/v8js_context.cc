@@ -84,9 +84,11 @@ V8JsContext::V8JsContext(V8Runtime *rt, v8::Local<v8::Context> context)
   v8wrap::set_ptr(context, V8_JS_CONTEXT_JSGLOBAL_INDEX, global_scope_);
   v8wrap::set_ptr(context, V8_JS_CONTEXT_REQUEST_SCOPE_INDEX, nullptr);
   v8wrap::set_ptr(context, V8_JS_CONTEXT_SELF_INDEX, this);
+
+  hlogi("v8js: create js context: %p", this);
 }
 
-V8JsContext::~V8JsContext() { hlogd("v8js: dispose jsContext, jsCtx:%p", this); }
+V8JsContext::~V8JsContext() { hlogi("v8js: dispose jsContext :%p", this); }
 
 void V8JsContext::set_exception(const std::string &msg, const std::string &stack) {
   error_code_ = common::ERROR_RUNTIME_COMPILE_ERROR;
@@ -103,8 +105,6 @@ void V8JsContext::check_handler_registered() {
 }
 
 int V8JsContext::handle_http_request(core::RequestScope *reqScope) {
-  printf("v8js: handle http request, reqScope:%p\n", reqScope);
-
   v8::Isolate::Scope isolate_scope(isolate_);
   v8::HandleScope handle_scope(isolate_);
 
@@ -128,7 +128,10 @@ int V8JsContext::handle_http_request(core::RequestScope *reqScope) {
   return reqScope->handle_response();
 }
 
-void V8JsContext::recycle() { runtime_->recycle_context(this); }
+void V8JsContext::recycle() {
+  hlogi("v8js: recycle js context: %p", this);
+  runtime_->recycle_context(this);
+}
 
 void V8JsContext::save_response_promise(v8::Local<v8::Promise> promise) {
   respose_promise_.Set(isolate_, promise);

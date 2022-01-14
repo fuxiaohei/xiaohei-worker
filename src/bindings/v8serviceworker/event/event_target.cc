@@ -16,6 +16,8 @@
 #include <webapi/event_target.h>
 #include <webapi/global_scope.h>
 
+#include <string>
+
 namespace v8serviceworker {
 
 static webapi::EventTarget *get_event_target(const v8::FunctionCallbackInfo<v8::Value> &args) {

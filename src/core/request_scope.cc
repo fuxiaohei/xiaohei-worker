@@ -22,6 +22,10 @@ int RequestScope::destroy() {
 }
 
 RequestScope::~RequestScope() {
+  if (runtime_context_) {
+    runtime_context_->recycle();
+  }
+
   terminate_fetch_requests();
 
   heap_->free();

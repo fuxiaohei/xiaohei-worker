@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2021 fuxiaohei. All rights reserved.
+ * Licensed under the Apache 2.0 License. See License file in the project root for
+ * license information.
+ */
+
 #include <bindings/v8serviceworker/event/fetch_event.h>
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <common/common.h>
@@ -8,6 +14,8 @@
 #include <v8wrap/js_value.h>
 #include <webapi/event_target.h>
 #include <webapi/fetch/fetch_response.h>
+
+#include <string>
 
 namespace v8serviceworker {
 

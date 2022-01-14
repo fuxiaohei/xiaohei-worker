@@ -14,3 +14,4 @@ namespace v8serviceworker {
 v8::Local<v8::FunctionTemplate> create_response_template(v8wrap::IsolateData *isolateData);
 
 }  // namespace v8serviceworker
+

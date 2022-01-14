@@ -12,6 +12,8 @@
 #include <v8wrap/isolate.h>
 #include <v8wrap/js_value.h>
 
+#include <string>
+
 namespace v8serviceworker {
 
 void JsEventListener::call(webapi::Event *event) {

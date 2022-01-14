@@ -27,3 +27,7 @@ lint:
 	@cpplint --verbose=1 ./cmd/*/*.cc
 	@cpplint --verbose=1 ./src/**/*.h
 	@cpplint --verbose=1 ./src/**/*.cc
+	@cpplint --verbose=1 ./src/**/**/*.h
+	@cpplint --verbose=1 ./src/**/**/*.cc
+	@cpplint --verbose=1 ./src/**/**/**/*.h
+	@cpplint --verbose=1 ./src/**/**/**/*.cc

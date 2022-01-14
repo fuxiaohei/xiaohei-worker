@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2021 fuxiaohei. All rights reserved.
+ * Licensed under the Apache 2.0 License. See License file in the project root for
+ * license information.
+ */
+
 #include <webapi/fetch/fetch_headers.h>
 #include <webapi/fetch/fetch_response.h>
 

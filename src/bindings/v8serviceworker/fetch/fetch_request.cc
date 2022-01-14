@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2021 fuxiaohei. All rights reserved.
+ * Licensed under the Apache 2.0 License. See License file in the project root for
+ * license information.
+ */
+
 #include <bindings/v8serviceworker/fetch/fetch.h>
 #include <bindings/v8serviceworker/fetch/fetch_request.h>
 #include <bindings/v8serviceworker/serviceworker.h>

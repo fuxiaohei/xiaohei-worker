@@ -11,6 +11,7 @@
 #include <v8.h>
 
 #include <queue>
+#include <string>
 
 #define V8_JS_ISOLATE_MEMORY_LIMIT 128  // in mb
 
