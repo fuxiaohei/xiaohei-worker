@@ -21,17 +21,23 @@ void FetchBackend::save(int id, FetchContext* context) {
 }
 
 int FetchBackend::call(int id) {
-  hlogd("FetchBackend::call, id:%d", id);
   auto it = contexts_.find(id);
   if (it == contexts_.end()) {
     hlogw("FetchBackend::call, id:%d, not found", id);
     return -1;
   }
   it->second->do_request();
+  hlogd("FetchBackend::call, id:%d", id);
   return 0;
 }
 
 int FetchBackend::terminate(int id) {
+  auto it = contexts_.find(id);
+  if (it == contexts_.end()) {
+    hlogw("FetchBackend::terminate, id:%d, not found", id);
+    return -1;
+  }
+  it->second->terminate();
   hlogd("FetchBackend::terminate, id:%d", id);
   return 0;
 }

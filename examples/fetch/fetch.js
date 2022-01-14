@@ -7,7 +7,8 @@ async function handleRequest(request) {
     if (request.method !== 'GET') {
         return MethodNotAllowed(request)
     }
-    return fetch(`https://example.com`)
+    fetch(`https://example.com`)
+    return new Response("okkkkk!")
 }
 
 function MethodNotAllowed(request) {

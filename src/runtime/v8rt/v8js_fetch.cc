@@ -19,6 +19,8 @@ namespace v8rt {
 V8FetchContext::V8FetchContext(core::RequestScope *req_scope,
                                v8::Local<v8::Promise::Resolver> resolver)
     : reqScope_(req_scope) {
+  retain();
+
   fetchReqID_ = common::create_id();
   runtime::FetchBackend::Save(fetchReqID_, this);
   reqScope_->append_fetch_request(fetchReqID_);
@@ -36,7 +38,7 @@ V8FetchContext::V8FetchContext(core::RequestScope *req_scope,
   req_->method = HTTP_GET;
   req_->timeout = 10;
 
-  hlogd("v8js_fetch: created, id: %d", fetchReqID_);
+  hlogd("v8js_fetch: created, id: %d, refCount:%d", fetchReqID_, get_ref_count());
 }
 
 void V8FetchContext::set_url(const std::string &url) { req_->url = url; }
@@ -47,6 +49,8 @@ void V8FetchContext::do_request() {
     return;
   }
   is_sent_.store(true);
+
+  retain();
 
   // set keepalive
   if (req_->GetHeader("Connection").empty()) {
@@ -60,7 +64,8 @@ void V8FetchContext::do_request() {
     }
     resp_ = resp;
 
-    hlogd("v8js_fetch: send_async_once: response, id: %d, resp: %p", fetchReqID_, resp.get());
+    hlogd("v8js_fetch: send_async_once: response, id: %d, resp: %p, refCount:%d", fetchReqID_,
+          resp.get(), get_ref_count());
 
     // make sure isolate is used in same thread,
     // it need notify http request thread to handle fetch response to fulfill promise.
@@ -68,10 +73,16 @@ void V8FetchContext::do_request() {
   });
 }
 
-void V8FetchContext::terminate() {}
+void V8FetchContext::terminate() { release(); }
+
+void V8FetchContext::destroy() {
+  hlogd("v8js_fetch: destroy, id: %d, refCount:%d", fetchReqID_, get_ref_count());
+  delete this;
+}
 
 void V8FetchContext::notify_request_done() {
   if (mainloop_ == nullptr) {
+    release();
     return;
   }
 
@@ -100,11 +111,14 @@ void V8FetchContext::fulfill_promise() {
     v8wrap::set_ptr(response_obj.As<v8::Object>(), response);
     // fullfil response
     resolver->Resolve(context, response_obj).Check();
-    hlogi("v8js_fetch: fulfill_promise: done, id: %d", fetchReqID_);
+    hlogi("v8js_fetch: fulfill_promise: done, id: %d, resp: %p, refCount:%d", fetchReqID_,
+          resp_.get(), get_ref_count());
   }
 
   // request scope all waitings
   reqScope_->handle_waitings();
+
+  release();
 }
 
 }  // namespace v8rt

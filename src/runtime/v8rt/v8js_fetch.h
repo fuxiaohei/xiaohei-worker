@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <common/common.h>
 #include <core/request_scope.h>
 #include <hv/EventLoop.h>
 #include <hv/HttpServer.h>
@@ -15,7 +16,7 @@
 
 namespace v8rt {
 
-class V8FetchContext : public runtime::FetchContext {
+class V8FetchContext : public runtime::FetchContext, common::RefCounted {
  public:
   static V8FetchContext* Create(core::RequestScope* req_scope,
                                 v8::Local<v8::Promise::Resolver> resolver) {
@@ -28,6 +29,7 @@ class V8FetchContext : public runtime::FetchContext {
   void do_request() override;
   bool is_do_requested() override { return is_sent_.load(); }
   void terminate() override;
+  void destroy() override;
 
  private:
   explicit V8FetchContext(core::RequestScope* req_scope, v8::Local<v8::Promise::Resolver> resolver);
