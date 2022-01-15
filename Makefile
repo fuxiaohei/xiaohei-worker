@@ -5,7 +5,7 @@ builddir:=$(workdir)/build
 thirdpartydir:=$(workdir)/thirdparty
 
 build: 
-	@cmake -B${builddir} .
+	@cmake -B${builddir} -DCMAKE_BUILD_TYPE=Debug .
 	@cd ${builddir} && make -j4
 
 run: build

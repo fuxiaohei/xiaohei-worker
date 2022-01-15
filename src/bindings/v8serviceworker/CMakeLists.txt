@@ -1,7 +1,8 @@
 add_library(worker_v8serviceworker
     serviceworker.cc
 
-    base64/base64.cc
+    base64.cc
+    timer.cc
 
     event/event_target.cc
     event/event_listener.cc

@@ -4,7 +4,7 @@
  * license information.
  */
 
-#include <bindings/v8serviceworker/base64/base64.h>
+#include <bindings/v8serviceworker/base64.h>
 #include <hv/base64.h>
 #include <v8wrap/js_value.h>
 

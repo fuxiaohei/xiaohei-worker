@@ -4,11 +4,12 @@
  * license information.
  */
 
-#include <bindings/v8serviceworker/base64/base64.h>
+#include <bindings/v8serviceworker/base64.h>
 #include <bindings/v8serviceworker/event/event_target.h>
 #include <bindings/v8serviceworker/event/fetch_event.h>
 #include <bindings/v8serviceworker/fetch/fetch.h>
 #include <bindings/v8serviceworker/serviceworker.h>
+#include <bindings/v8serviceworker/timer.h>
 #include <v8wrap/isolate.h>
 #include <v8wrap/js_class.h>
 
@@ -34,6 +35,7 @@ v8::Local<v8::FunctionTemplate> create_service_worker_global_scope(v8::Isolate *
   register_fetch_event(isolateData, &builder);
   register_fetch_api(isolateData, &builder);
   register_base64_api(isolateData, &builder);
+  register_timer_api(isolateData, &builder);
 
   isolateData->setClassTemplate(CLASS_SERVICEWORKER_GLOBAL_SCOPE, globalScopeTemplate);
   return globalScopeTemplate;
