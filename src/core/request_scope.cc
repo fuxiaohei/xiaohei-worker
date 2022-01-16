@@ -16,6 +16,10 @@ RequestScope::RequestScope(const HttpContextPtr& ctx) : ctx_(ctx) {
 }
 
 int RequestScope::destroy() {
+  if (!is_all_waituntils_done()) {
+    hlogi("RequestScope::destroy() %p, waituntils_ not empty", this);
+    return -1;
+  }
   hlogi("RequestScope::destroy %p", this);
   delete this;
   return 0;
@@ -118,7 +122,7 @@ void RequestScope::handle_waitings() {
     hlogd("RequestScope::handle_waitings %p, response is sent", this);
   }
 
-  if (is_response_sent_.load()) {
+  if (is_response_sent_.load() && is_all_waituntils_done()) {
     hlogd("RequestScope::handle_waitings %p, response is done", this);
     destroy();
   }
@@ -148,6 +152,32 @@ void RequestScope::terminate_timers() {
   for (auto timer : timers_) {
     timer->terminate();
   }
+}
+
+void RequestScope::save_waituntil(runtime::WaitUntilContext* waitUntil) {
+  hlogd("RequestScope::save_waituntil %p, waitUntil:%p", this, waitUntil);
+  waituntils_.push_back(waitUntil);
+}
+
+bool RequestScope::is_all_waituntils_done() {
+  if (waituntils_.empty()) {
+    hlogd("RequestScope::is_all_waituntils_done %p, waituntils is empty", this);
+    return true;
+  }
+  int doneCounter = 0;
+  for (auto waitUntil : waituntils_) {
+    if (waitUntil->is_fulfilled()) {
+      doneCounter++;
+    }
+  }
+  if (doneCounter == waituntils_.size()) {
+    hlogd("RequestScope::is_all_waituntils_done %p, all waituntils are done, size:%d", this,
+          waituntils_.size());
+    return true;
+  }
+  hlogd("RequestScope::is_all_waituntils_done %p, waituntils is not done, doneCounter:%d, size:%d",
+        this, doneCounter, waituntils_.size());
+  return false;
 }
 
 }  // namespace core

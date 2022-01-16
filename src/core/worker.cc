@@ -123,9 +123,8 @@ int Worker::handle_http_request(const HttpContextPtr &ctx) {
   auto runContext = runner_->get_context();
 
   auto respStatus = runContext->handle_http_request(reqScope);
-  if (respStatus != 0) {
+  if (respStatus != 0 && reqScope->destroy() == 0) {
     hlogd("worker: handle http request, worker:%p, status:%d", this, respStatus);
-    reqScope->destroy();
     runContext->recycle();
   } else {
     hlogd("worker: handle http request, waitings, worker:%p, status:%d", this, respStatus);

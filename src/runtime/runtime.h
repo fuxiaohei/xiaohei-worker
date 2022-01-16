@@ -68,7 +68,20 @@ class Runtime {
 
 class Timer {
  public:
+  Timer() = default;
+  virtual ~Timer() {}
+
+ public:
   virtual void terminate() = 0;
+};
+
+class WaitUntilContext {
+ public:
+  WaitUntilContext() = default;
+  virtual ~WaitUntilContext() {}
+
+ public:
+  virtual bool is_fulfilled() = 0;
 };
 
 }  // namespace runtime

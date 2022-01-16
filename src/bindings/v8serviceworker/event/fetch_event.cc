@@ -7,7 +7,9 @@
 #include <bindings/v8serviceworker/event/fetch_event.h>
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <common/common.h>
+#include <core/request_scope.h>
 #include <hv/hlog.h>
+#include <runtime/runtime.h>
 #include <runtime/v8rt/v8js_context.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/isolate.h>
@@ -80,7 +82,66 @@ static void fetch_event_js_respondWith(const v8::FunctionCallbackInfo<v8::Value>
   hlogi("fetch_event_js_respondWith save response, response:%p, reqScope:%p", response, reqScope);
 }
 
-static void fetch_event_js_waitUntil(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+class JsWaitUntil : public common::HeapObject, public runtime::WaitUntilContext {
+ public:
+  bool is_fulfilled() override;
+  void set_promise(core::RequestScope *req_scope, v8::Local<v8::Promise> promise);
+
+ private:
+  friend class common::Heap;
+  JsWaitUntil() = default;
+  ~JsWaitUntil() = default;
+
+ private:
+  core::RequestScope *reqScope_ = nullptr;
+  v8::Isolate *isolate_ = nullptr;
+  // v8::Eternal<v8::Context> context_;
+  v8::Eternal<v8::Promise> promise_;
+  std::atomic<bool> is_fulfilled_ = {false};
+};
+
+void JsWaitUntil::set_promise(core::RequestScope *req_scope, v8::Local<v8::Promise> promise) {
+  reqScope_ = req_scope;
+  isolate_ = promise->GetIsolate();
+  // context_.Set(isolate_, v8::Isolate::GetCurrent()->GetCurrentContext());
+  promise_.Set(isolate_, promise);
+  hlogd("waituntil: create context, thisptr:%p, scope:%p", this, reqScope_);
+}
+
+bool JsWaitUntil::is_fulfilled() {
+  if (is_fulfilled_.load()) {
+    return true;
+  }
+  v8::HandleScope handle_scope(isolate_);
+  v8::Local<v8::Promise> promise = promise_.Get(isolate_);
+  bool fulfilled = promise->State() == v8::Promise::kFulfilled;
+  if (fulfilled) {
+    hlogd("waituntil: promise fulfilled, thisptr:%p, scope:%p", this, reqScope_);
+    is_fulfilled_.store(true);
+    return true;
+  }
+  hlogd("waituntil: promise pending, thisptr:%p, scope:%p", this, reqScope_);
+  return false;
+}
+
+static void fetch_event_js_waitUntil(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  if (args.Length() == 0 || !args[0]->IsPromise()) {
+    v8wrap::throw_type_error(args.GetIsolate(), "event.waitUntil: argument must be a Promise");
+    return;
+  }
+  auto isolate = args.GetIsolate();
+  auto context = isolate->GetCurrentContext();
+
+  auto reqScope = v8rt::getRequestScope(context);
+  if (reqScope == nullptr) {
+    v8wrap::throw_type_error(isolate, "event.waitUntil: request scope is null");
+    return;
+  }
+
+  auto waitUntil = v8rt::allocObject<JsWaitUntil>(isolate);
+  waitUntil->set_promise(reqScope, args[0].As<v8::Promise>());
+  reqScope->save_waituntil(waitUntil);
+}
 
 static void fetch_event_js_request_getter(const v8::FunctionCallbackInfo<v8::Value> &args) {
   auto *isolate = args.GetIsolate();
