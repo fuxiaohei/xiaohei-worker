@@ -66,4 +66,9 @@ class Runtime {
   virtual std::string get_compile_error_message() = 0;
 };
 
+class Timer {
+ public:
+  virtual void terminate() = 0;
+};
+
 }  // namespace runtime

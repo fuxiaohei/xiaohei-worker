@@ -27,6 +27,7 @@ RequestScope::~RequestScope() {
   }
 
   terminate_fetch_requests();
+  terminate_timers();
 
   heap_->free();
   heap_ = nullptr;
@@ -138,6 +139,14 @@ void RequestScope::do_fetch_requests() {
 void RequestScope::terminate_fetch_requests() {
   for (auto fetchCtx : fetch_requests_) {
     fetchCtx->terminate();
+  }
+}
+
+void RequestScope::save_timer(runtime::Timer* timer) { timers_.push_back(timer); }
+
+void RequestScope::terminate_timers() {
+  for (auto timer : timers_) {
+    timer->terminate();
   }
 }
 

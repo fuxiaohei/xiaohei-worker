@@ -18,6 +18,7 @@
 namespace runtime {
 class RuntimeContext;
 class FetchContext;
+class Timer;
 }  // namespace runtime
 
 namespace core {
@@ -38,6 +39,7 @@ class RequestScope {
   void set_runtime_context(runtime::RuntimeContext* context) { runtime_context_ = context; }
 
   void save_fetch_request(runtime::FetchContext* fetchContext);
+  void save_timer(runtime::Timer* timer);
 
   int destroy();
 
@@ -54,6 +56,7 @@ class RequestScope {
 
   void do_fetch_requests();
   void terminate_fetch_requests();
+  void terminate_timers();
 
  private:
   HttpContextPtr ctx_;
@@ -69,6 +72,7 @@ class RequestScope {
   runtime::RuntimeContext* runtime_context_ = nullptr;
 
   std::vector<runtime::FetchContext*> fetch_requests_;
+  std::vector<runtime::Timer*> timers_;
 };
 
 }  // namespace core
