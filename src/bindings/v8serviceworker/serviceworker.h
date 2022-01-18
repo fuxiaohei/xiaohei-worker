@@ -16,6 +16,8 @@
 #define CLASS_FETCH_REQUEST "Request"
 #define CLASS_FETCH_RESPONSE "Response"
 
+#define CLASS_READABLE_STREAM "ReadableStream"
+
 namespace v8serviceworker {
 
 v8::Local<v8::FunctionTemplate> create_service_worker_global_scope(v8::Isolate *isolate);
