@@ -56,6 +56,7 @@ int MainContext::run(int argc, char **argv) {
 
   // init v8
   v8wrap::init("");
+  hlogi("v8 version: %s", v8wrap::get_version());
 
   // set http router
   hv::HttpService service;

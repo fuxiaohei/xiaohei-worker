@@ -17,7 +17,7 @@ tar -xzvf ${openssl_tar}
 cd ${openssl_name}
 ./config --prefix=${openssl_target}
 make -j4
-make install
+make install_sw
 
 cd ../
 rm -rf include/ lib/
