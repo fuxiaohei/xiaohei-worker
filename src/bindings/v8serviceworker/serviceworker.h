@@ -17,6 +17,7 @@
 #define CLASS_FETCH_RESPONSE "Response"
 
 #define CLASS_READABLE_STREAM "ReadableStream"
+#define CLASS_READABLE_STREAM_DEFAULT_CONTROLLER "ReadableStreamDefaultController"
 
 namespace v8serviceworker {
 
