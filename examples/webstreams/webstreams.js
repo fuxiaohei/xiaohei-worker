@@ -3,7 +3,6 @@ addEventListener("fetch", async event => {
     const readable = new ReadableStream({
         start:function(controller){
             controller.enqueue(i++)
-
         },
         pull:function(controller){
             controller.enqueue(i++)

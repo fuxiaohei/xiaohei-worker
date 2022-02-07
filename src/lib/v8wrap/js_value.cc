@@ -101,4 +101,11 @@ bool is_sequence(v8::Local<v8::Context> context, v8::Local<v8::Value> value) {
   return value->IsObject();
 }
 
+v8::Local<v8::Promise::Resolver> promise_undefined(v8::Isolate *isolate) {
+  auto context = isolate->GetCurrentContext();
+  auto resolver = v8::Promise::Resolver::New(context).ToLocalChecked();
+  resolver->Resolve(context, v8::Undefined(isolate)).Check();
+  return resolver;
+}
+
 }  // namespace  v8wrap

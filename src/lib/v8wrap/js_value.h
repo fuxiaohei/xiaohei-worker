@@ -78,4 +78,6 @@ v8::Local<v8::FunctionTemplate> new_function_template(v8::Isolate *isolate, v8::
 
 bool is_sequence(v8::Local<v8::Context> context, v8::Local<v8::Value> value);
 
+v8::Local<v8::Promise::Resolver> promise_undefined(v8::Isolate *isolate);
+
 }  // namespace v8wrap

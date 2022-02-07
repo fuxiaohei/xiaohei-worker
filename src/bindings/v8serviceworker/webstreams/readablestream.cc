@@ -6,11 +6,17 @@
 
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <bindings/v8serviceworker/webstreams/readablestream.h>
+#include <bindings/v8serviceworker/webstreams/readablestream_controller.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/js_value.h>
-#include <webapi/webstreams/readable_stream.h>
 
 namespace v8serviceworker {
+
+// --- ReadableStream ---
+
+size_t ReadableStream::getDesiredSize() { return get_high_water_mark() - get_queue_total_size(); }
+
+// --- ReadableStream Js Methods --
 
 static void readablestream_js_constructor(const v8::FunctionCallbackInfo<v8::Value> &args) {
   if (args.Length() == 1) {
@@ -21,10 +27,12 @@ static void readablestream_js_constructor(const v8::FunctionCallbackInfo<v8::Val
     }
   }
 
-  // use webapi::WebStreams to save state
+  // use ReadableStream to save state
   auto isolate = args.GetIsolate();
-  auto stream = v8rt::allocObject<webapi::ReadableStream>(isolate);
-  
+  auto stream = v8rt::allocObject<ReadableStream>(isolate);
+
+  // setup controller
+  setupReadableStreamDefaultControllerFromSource(args, stream);
 }
 
 v8::Local<v8::FunctionTemplate> create_readablestream_template(v8wrap::IsolateData *isolateData) {
