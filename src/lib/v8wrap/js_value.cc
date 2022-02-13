@@ -89,6 +89,12 @@ v8::Local<v8::FunctionTemplate> new_function_template(v8::Isolate *isolate, v8::
   return v8::FunctionTemplate::New(isolate, fn, v8::External::New(isolate, data));
 }
 
+v8::Local<v8::Function> new_function(v8::Isolate *isolate, v8::FunctionCallback fn, void *data) {
+  return new_function_template(isolate, fn, data)
+      ->GetFunction(isolate->GetCurrentContext())
+      .ToLocalChecked();
+}
+
 bool is_sequence(v8::Local<v8::Context> context, v8::Local<v8::Value> value) {
   if (value->IsArray()) {
     auto arr = value.As<v8::Array>();
@@ -102,10 +108,30 @@ bool is_sequence(v8::Local<v8::Context> context, v8::Local<v8::Value> value) {
 }
 
 v8::Local<v8::Promise::Resolver> promise_undefined(v8::Isolate *isolate) {
+  return promise_resolved(isolate, v8::Undefined(isolate));
+}
+
+v8::Local<v8::Promise::Resolver> promise_resolved(v8::Isolate *isolate,
+                                                  v8::Local<v8::Value> value) {
   auto context = isolate->GetCurrentContext();
   auto resolver = v8::Promise::Resolver::New(context).ToLocalChecked();
-  resolver->Resolve(context, v8::Undefined(isolate)).Check();
+  resolver->Resolve(context, value).Check();
   return resolver;
+}
+
+static void promise_empty_fulfilled(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void promise_empty_rejected(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+
+v8::Local<v8::Promise> promise_then(v8::Isolate *isolate, v8::Local<v8::Promise> promise,
+                                    v8::Local<v8::Function> onFulfilled,
+                                    v8::Local<v8::Function> onRejected) {
+  if (onFulfilled.IsEmpty()) {
+    onFulfilled = new_function(isolate, promise_empty_fulfilled, nullptr);
+  }
+  if (onRejected.IsEmpty()) {
+    onRejected = new_function(isolate, promise_empty_rejected, nullptr);
+  }
+  return promise->Then(isolate->GetCurrentContext(), onFulfilled, onRejected).ToLocalChecked();
 }
 
 }  // namespace  v8wrap

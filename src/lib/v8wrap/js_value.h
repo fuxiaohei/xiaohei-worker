@@ -75,9 +75,13 @@ void get_exception(v8::Local<v8::Context> context, v8::TryCatch *try_catch, std:
 
 v8::Local<v8::FunctionTemplate> new_function_template(v8::Isolate *isolate, v8::FunctionCallback fn,
                                                       void *data);
+v8::Local<v8::Function> new_function(v8::Isolate *isolate, v8::FunctionCallback fn, void *data);
 
 bool is_sequence(v8::Local<v8::Context> context, v8::Local<v8::Value> value);
 
 v8::Local<v8::Promise::Resolver> promise_undefined(v8::Isolate *isolate);
-
+v8::Local<v8::Promise::Resolver> promise_resolved(v8::Isolate *isolate, v8::Local<v8::Value> value);
+v8::Local<v8::Promise> promise_then(v8::Isolate *isolate, v8::Local<v8::Promise> promise,
+                                    v8::Local<v8::Function> onFulfilled,
+                                    v8::Local<v8::Function> onRejected);
 }  // namespace v8wrap

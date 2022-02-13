@@ -29,7 +29,7 @@ class ReadableStream : public common::HeapObject {
 
  public:
   ReadableStreamState state_ = ReadableStreamState_Readable;
-  ReadableStreamDefaultController* controller_ = nullptr;
+  ReadableStreamDefaultController *controller_ = nullptr;
 
  private:
   friend class common::Heap;

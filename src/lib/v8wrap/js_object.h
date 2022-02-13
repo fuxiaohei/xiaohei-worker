@@ -7,6 +7,7 @@
 #pragma once
 
 #include <v8.h>
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -17,6 +18,7 @@ bool has_property(v8::Local<v8::Object> object, const std::string &name);
 v8::Local<v8::Value> get_property(v8::Local<v8::Object> object, const std::string &name);
 void set_property(v8::Local<v8::Object> object, const std::string &name,
                   v8::Local<v8::Value> value);
+v8::Local<v8::Value> get_property(v8::Local<v8::Object> object, const std::string &name);
 
 bool convert_object_map(v8::Local<v8::Context> context, v8::Local<v8::Value> value,
                         std::vector<std::pair<std::string, std::string>> *map);

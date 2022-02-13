@@ -13,10 +13,15 @@ namespace v8serviceworker {
 
 class UnderlyingSource : public common::HeapObject {
  public:
+  static UnderlyingSource* setup(v8::Local<v8::Object> object);
+
+ public:
+  v8::Local<v8::Promise> call_start(v8::Local<v8::Object> controller);
+
+ private:
   v8::Eternal<v8::Function> cancelAlgorithm_;
   v8::Eternal<v8::Function> pullAlgorithm_;
   v8::Eternal<v8::Function> startAlgorithm_;
-  v8::Eternal<v8::Function> sizeAlgorithm_;
 
  private:
   friend class common::Heap;

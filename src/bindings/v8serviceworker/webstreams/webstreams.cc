@@ -1,7 +1,13 @@
+/*
+ * Copyright (c) 2022 fuxiaohei. All rights reserved.
+ * Licensed under the Apache 2.0 License. See License file in the project root for
+ * license information.
+ */
+
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <bindings/v8serviceworker/webstreams/readablestream.h>
-#include <bindings/v8serviceworker/webstreams/webstreams.h>
 #include <bindings/v8serviceworker/webstreams/readablestream_controller.h>
+#include <bindings/v8serviceworker/webstreams/webstreams.h>
 
 namespace v8serviceworker {
 
@@ -10,7 +16,7 @@ void register_webstreams_api(v8wrap::IsolateData *isolateData, v8wrap::ClassBuil
   classBuilder->setMethod(CLASS_READABLE_STREAM, rs);
 
   auto rsDefaultController = create_readablestream_controller_template(isolateData);
-  classBuilder->setMethod(CLASS_READABLE_STREAM_DEFAULT_CONTROLLER,rsDefaultController);
+  classBuilder->setMethod(CLASS_READABLE_STREAM_DEFAULT_CONTROLLER, rsDefaultController);
 }
 
 }  // namespace v8serviceworker

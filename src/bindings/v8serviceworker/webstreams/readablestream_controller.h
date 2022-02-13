@@ -16,23 +16,20 @@
 namespace v8serviceworker {
 
 class ReadableStream;
+class UnderlyingSource;
 
 class ReadableStreamDefaultController : public common::HeapObject {
  public:
   size_t get_queue_total_size();
 
  public:
-  v8::Eternal<v8::Function> cancelAlgorithm_;
-  v8::Eternal<v8::Function> pullAlgorithm_;
-  v8::Eternal<v8::Function> startAlgorithm_;
-  v8::Eternal<v8::Function> sizeAlgorithm_;
-
   bool closeRequested_ = false;
   bool pullAgain_ = false;
   bool pulling_ = false;
   bool started_ = false;
 
   ReadableStream *stream_ = nullptr;
+  UnderlyingSource *source_ = nullptr;
 
  private:
   friend class common::Heap;
