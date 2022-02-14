@@ -67,6 +67,10 @@ void throw_type_error(v8::Isolate *isolate, const std::string &message) {
   isolate->ThrowException(new_type_error(isolate, message));
 }
 
+void throw_range_error(v8::Isolate *isolate, const std::string &message) {
+  isolate->ThrowException(v8::Exception::RangeError(v8wrap::new_string(isolate, message)));
+}
+
 bool valid_arglen(const v8::FunctionCallbackInfo<v8::Value> &args, int expect,
                   const std::string &desc) {
   if (args.Length() >= expect) {

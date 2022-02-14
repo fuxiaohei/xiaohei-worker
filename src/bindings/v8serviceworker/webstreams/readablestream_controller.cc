@@ -40,7 +40,29 @@ static void readablestream_controller_js_close(const v8::FunctionCallbackInfo<v8
 }
 
 static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<v8::Value> &args) {
-  printf("readablestream_controller_js_enqueue\n");
+  using v8serviceworker::ReadableStreamDefaultController;
+  auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args.Holder());
+  printf("readablestream_controller_js_enqueue:%p\n", controller);
+
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-enqueue
+  // 1. Let stream be controller.[[controlledReadableStream]].
+  const auto stream = controller->stream_;
+
+  // 2. Assert: ! ReadableStreamDefaultControllerCanCloseOrEnqueue(controller)
+  //    is true.
+  assert(readableStreamDefaultControllerCanCloseOrEnqueue(controller));
+
+  // 3. If ! IsReadableStreamLocked(stream) is true and !
+  //    ReadableStreamGetNumReadRequests(stream) > 0, perform !
+  //    ReadableStreamFulfillReadRequest(stream, chunk, false).
+  if (stream->isLocked() && stream->getNumReadRequests() > 0) {
+    // TODO(fxh): readableStreamFulfillReadRequest(stream, args[0], false);
+  } else {
+    // 4. Otherwise,
+    //   a. Let result be the result of performing controller.
+    //      [[strategySizeAlgorithm]], passing in chunk, and interpreting the
+    //      result as an ECMAScript completion value.
+  }
 }
 
 static void readablestream_controller_js_error(const v8::FunctionCallbackInfo<v8::Value> &args) {
@@ -66,9 +88,6 @@ v8::Local<v8::FunctionTemplate> create_readablestream_controller_template(
   return rsTemplate;
 }
 
-static void readableStreamDefaultControllerCallPullIfNeeded(
-    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller);
-
 static void controller_pullAlgorithm_resolved(const v8::FunctionCallbackInfo<v8::Value> &args) {
   auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args);
   // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
@@ -91,8 +110,7 @@ static void controller_pullAlgorithm_rejected(const v8::FunctionCallbackInfo<v8:
   printf("controller_pullAlgorithm_rejected\n");
 }
 
-static bool readableStreamDefaultControllerCanCloseOrEnqueue(
-    ReadableStreamDefaultController *controller) {
+bool readableStreamDefaultControllerCanCloseOrEnqueue(ReadableStreamDefaultController *controller) {
   // https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
   // 1. Let state be controller.[[controlledReadableStream]].[[state]].
   auto state = controller->stream_->state_;
@@ -102,8 +120,7 @@ static bool readableStreamDefaultControllerCanCloseOrEnqueue(
   return !controller->is_close_requested_ && state == ReadableStreamState_Readable;
 }
 
-static bool readableStreamDefaultControllerShouldCallPull(
-    ReadableStreamDefaultController *controller) {
+bool readableStreamDefaultControllerShouldCallPull(ReadableStreamDefaultController *controller) {
   // https://streams.spec.whatwg.org/#readable-stream-default-controller-should-call-pull
   // 1. Let stream be controller.[[controlledReadableStream]].
 
@@ -133,7 +150,7 @@ static bool readableStreamDefaultControllerShouldCallPull(
   return desiredSize > 0;
 }
 
-static void readableStreamDefaultControllerCallPullIfNeeded(
+void readableStreamDefaultControllerCallPullIfNeeded(
     const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller) {
   auto isolate = args.GetIsolate();
 
@@ -178,7 +195,7 @@ static void readableStreamDefaultControllerError(ReadableStreamDefaultController
 
   // TODO(fxh): 3. Perform ! ResetQueue(controller).
   // TODO(fxh): 4. Perform ! ReadableStreamDefaultControllerClearAlgorithms(controller).
-  // TODO(fxh): 5. Perform ! ReadableStreamError(stream, e). 
+  // TODO(fxh): 5. Perform ! ReadableStreamError(stream, e).
 
   printf("readableStreamDefaultControllerError\n");
 }

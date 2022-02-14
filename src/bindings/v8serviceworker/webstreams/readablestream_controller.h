@@ -54,4 +54,9 @@ v8::Local<v8::FunctionTemplate> create_readablestream_controller_template(
 void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackInfo<v8::Value> &args,
                                                     ReadableStream *rs);
 
+bool readableStreamDefaultControllerCanCloseOrEnqueue(ReadableStreamDefaultController *controller);
+void readableStreamDefaultControllerCallPullIfNeeded(
+    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller);
+bool readableStreamDefaultControllerShouldCallPull(ReadableStreamDefaultController *controller);
+
 }  // namespace v8serviceworker

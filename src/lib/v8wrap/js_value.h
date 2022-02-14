@@ -75,6 +75,7 @@ int32_t get_int32(v8::Local<v8::Value> value);
 
 v8::Local<v8::Value> new_type_error(v8::Isolate *isolate, const std::string &message);
 void throw_type_error(v8::Isolate *isolate, const std::string &message);
+void throw_range_error(v8::Isolate *isolate, const std::string &message);
 bool valid_arglen(const v8::FunctionCallbackInfo<v8::Value> &args, int expect,
                   const std::string &desc);
 void get_exception(v8::Local<v8::Context> context, v8::TryCatch *try_catch, std::string *message,

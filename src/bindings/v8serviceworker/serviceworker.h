@@ -18,6 +18,7 @@
 
 #define CLASS_READABLE_STREAM "ReadableStream"
 #define CLASS_READABLE_STREAM_DEFAULT_CONTROLLER "ReadableStreamDefaultController"
+#define CLASS_COUNT_QUEUING_STRATEGY "CountQueuingStrategy"
 
 namespace v8serviceworker {
 
