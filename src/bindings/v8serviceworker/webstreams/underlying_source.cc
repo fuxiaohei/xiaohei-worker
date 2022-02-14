@@ -42,10 +42,27 @@ v8::Local<v8::Function> get_algorithm(v8::Isolate *isolate, v8::Local<v8::Object
 // --- UnderlyingSource ---
 
 v8::Local<v8::Promise> UnderlyingSource::call_start(v8::Local<v8::Object> controller) {
+  return call_algorithm(controller, "start");
+}
+
+v8::Local<v8::Promise> UnderlyingSource::call_pull(v8::Local<v8::Object> controller) {
+  return call_algorithm(controller, "pull");
+}
+
+v8::Local<v8::Promise> UnderlyingSource::call_algorithm(v8::Local<v8::Object> controller,
+                                                        const std::string &name) {
   auto isolate = controller->GetIsolate();
   auto context = isolate->GetCurrentContext();
-
-  auto fn = startAlgorithm_.Get(isolate);
+  v8::Local<v8::Function> fn;
+  if (name == "start") {
+    fn = startAlgorithm_.Get(isolate);
+  } else if (name == "pull") {
+    fn = pullAlgorithm_.Get(isolate);
+  } else if (name == "cancel") {
+    fn = cancelAlgorithm_.Get(isolate);
+  } else {
+    return v8wrap::promise_undefined(isolate)->GetPromise();
+  }
 
   // TODO(fxh): handle exception in start function
 

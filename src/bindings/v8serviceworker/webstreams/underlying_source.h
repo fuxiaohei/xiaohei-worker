@@ -17,6 +17,10 @@ class UnderlyingSource : public common::HeapObject {
 
  public:
   v8::Local<v8::Promise> call_start(v8::Local<v8::Object> controller);
+  v8::Local<v8::Promise> call_pull(v8::Local<v8::Object> controller);
+
+ private:
+  v8::Local<v8::Promise> call_algorithm(v8::Local<v8::Object> controller, const std::string& name);
 
  private:
   v8::Eternal<v8::Function> cancelAlgorithm_;

@@ -7,6 +7,7 @@
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <bindings/v8serviceworker/webstreams/readablestream.h>
 #include <bindings/v8serviceworker/webstreams/readablestream_controller.h>
+#include <bindings/v8serviceworker/webstreams/readablestream_reader.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/js_value.h>
 
@@ -15,6 +16,12 @@ namespace v8serviceworker {
 // --- ReadableStream ---
 
 size_t ReadableStream::getDesiredSize() { return get_high_water_mark() - get_queue_total_size(); }
+
+size_t ReadableStream::getNumReadRequests() {
+  printf("ReadableStream::getNumReadRequests():%p\n", reader_);
+  assert(reader_ != nullptr);
+  return reader_->getReadRequestsSize();
+}
 
 // --- ReadableStream Js Methods --
 

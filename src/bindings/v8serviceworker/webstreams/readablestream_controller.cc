@@ -35,11 +35,17 @@ static void readablestream_controller_js_desiredSize_getter(
   args.GetReturnValue().Set(int32_t(rs->getDesiredSize()));
 }
 
-static void readablestream_controller_js_close(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void readablestream_controller_js_close(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  printf("readablestream_controller_js_close\n");
+}
 
-static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  printf("readablestream_controller_js_enqueue\n");
+}
 
-static void readablestream_controller_js_error(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void readablestream_controller_js_error(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  printf("readablestream_controller_js_error\n");
+}
 
 namespace v8serviceworker {
 
@@ -60,12 +66,143 @@ v8::Local<v8::FunctionTemplate> create_readablestream_controller_template(
   return rsTemplate;
 }
 
+static void readableStreamDefaultControllerCallPullIfNeeded(
+    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller);
+
+static void controller_pullAlgorithm_resolved(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args);
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
+  // 7. Upon fulfillment of pullPromise,
+  //   a. Set controller.[[pulling]] to false.
+  controller->pulling_ = false;
+  printf("controller_pullAlgorithm_resolved, again:%d\n", controller->pull_again_);
+
+  //   b. If controller.[[pullAgain]] is true,
+  if (controller->pull_again_) {
+    //  i. Set controller.[[pullAgain]] to false.
+    controller->pull_again_ = false;
+
+    //  ii. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(
+    //      controller).
+    readableStreamDefaultControllerCallPullIfNeeded(args, controller);
+  }
+}
+static void controller_pullAlgorithm_rejected(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  printf("controller_pullAlgorithm_rejected\n");
+}
+
+static bool readableStreamDefaultControllerCanCloseOrEnqueue(
+    ReadableStreamDefaultController *controller) {
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-can-close-or-enqueue
+  // 1. Let state be controller.[[controlledReadableStream]].[[state]].
+  auto state = controller->stream_->state_;
+  // 2. If controller.[[closeRequested]] is false and state is "readable",
+  //    return true.
+  // 3. Otherwise, return false.
+  return !controller->is_close_requested_ && state == ReadableStreamState_Readable;
+}
+
+static bool readableStreamDefaultControllerShouldCallPull(
+    ReadableStreamDefaultController *controller) {
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-should-call-pull
+  // 1. Let stream be controller.[[controlledReadableStream]].
+
+  // 2. If ! ReadableStreamDefaultControllerCanCloseOrEnqueue(controller) is
+  //    false, return false.
+  if (!readableStreamDefaultControllerCanCloseOrEnqueue(controller)) {
+    return false;
+  }
+
+  // 3. If controller.[[started]] is false, return false.
+  if (controller->started_ == false) {
+    return false;
+  }
+
+  // 4. If ! IsReadableStreamLocked(stream) is true and !
+  //    ReadableStreamGetNumReadRequests(stream) > 0, return true.
+  if (controller->stream_->isLocked() && controller->stream_->getNumReadRequests() > 0) {
+    return true;
+  }
+
+  // 5. Let desiredSize be ! ReadableStreamDefaultControllerGetDesiredSize
+  //    (controller).
+  // 6. Assert: desiredSize is not null.
+  // 7. If desiredSize > 0, return true.
+  // 8. Return false.
+  auto desiredSize = controller->getDesiredSize();
+  return desiredSize > 0;
+}
+
+static void readableStreamDefaultControllerCallPullIfNeeded(
+    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller) {
+  auto isolate = args.GetIsolate();
+
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
+  // 1. Let shouldPull be ! ReadableStreamDefaultControllerShouldCallPull(
+  //    controller).
+  bool shouldPull = readableStreamDefaultControllerShouldCallPull(controller);
+  // 2. If shouldPull is false, return.
+  if (!shouldPull) {
+    return;
+  }
+
+  // 3. If controller.[[pulling]] is true,
+  if (controller->pulling_) {
+    controller->pull_again_ = true;
+    return;
+  }
+
+  // 4. Assert: controller.[[pullAgain]] is false.
+  // 5. Set controller.[[pulling]] to true.
+  controller->pulling_ = true;
+
+  // 6. Let pullPromise be the result of performing
+  //    controller.[[pullAlgorithm]].
+  auto controller_obj = controller->js_object_.Get(isolate);
+  auto pullPromise = controller->source_->call_pull(controller_obj);
+  v8wrap::promise_then(
+      isolate, pullPromise,
+      v8wrap::new_function(isolate, controller_pullAlgorithm_resolved, controller),
+      v8wrap::new_function(isolate, controller_pullAlgorithm_rejected, controller));
+}
+
+static void readableStreamDefaultControllerError(ReadableStreamDefaultController *controller) {
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
+  // 1. Let stream be controller.[[controlledReadableStream]].
+  auto stream = controller->stream_;
+
+  // 2. If stream.[[state]] is not "readable", return.
+  if (stream->state_ != ReadableStreamState_Readable) {
+    return;
+  }
+
+  // TODO(fxh): 3. Perform ! ResetQueue(controller).
+  // TODO(fxh): 4. Perform ! ReadableStreamDefaultControllerClearAlgorithms(controller).
+  // TODO(fxh): 5. Perform ! ReadableStreamError(stream, e). 
+
+  printf("readableStreamDefaultControllerError\n");
+}
+
 static void controller_startAlgorithm_resolved(const v8::FunctionCallbackInfo<v8::Value> &args) {
-  printf("controller_startAlgorithm_resolved\n");
+  auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args);
+  // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
+  //  11. Upon fulfillment of startPromise,
+  //    a. Set controller.[[started]] to true.
+  //    b. Assert: controller.[[pulling]] is false.
+  //    c. Assert: controller.[[pullAgain]] is false.
+  controller->started_ = true;
+
+  //    d. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(
+  //       controller).
+  readableStreamDefaultControllerCallPullIfNeeded(args, controller);
 }
 
 static void controller_startAlgorithm_rejected(const v8::FunctionCallbackInfo<v8::Value> &args) {
-  printf("controller_startAlgorithm_rejected\n");
+  // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
+  //  12. Upon rejection of startPromise with reason r,
+  //    a. Perform ! ReadableStreamDefaultControllerError(controller, r).
+  auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args);
+  readableStreamDefaultControllerError(controller);
 }
 
 void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackInfo<v8::Value> &args,
@@ -80,16 +217,13 @@ void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackIn
         isolate, "setupReadableStreamDefaultControllerFromSource: request scope is null");
     return;
   }
-
+  // https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
   // 1. Assert: stream.[[readableStreamController]] is undefined.
   if (rs->controller_ != nullptr) {
-    v8wrap::throw_type_error(isolate,
-                             "setupReadableStreamDefaultControllerFromSource: controller is not "
-                             "null");
+    v8wrap::throw_type_error(isolate, "controller is not null");
     return;
   }
 
-  // create ReadableStreamDefaultController native object
   auto controller = v8rt::allocObject<ReadableStreamDefaultController>(isolate);
 
   // 2. Set controller.[[controlledReadableStream]] to stream.
@@ -108,18 +242,13 @@ void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackIn
   controller->source_ = UnderlyingSource::setup(args[0].As<v8::Object>());
   rs->controller_ = controller;
 
-  printf("setupReadableStreamDefaultControllerFromSource\n");
-
-  // create ReadableStreamDefaultController js object
   v8::Local<v8::Value> controller_obj;
   if (!v8wrap::IsolateData::NewInstance(context, CLASS_READABLE_STREAM_DEFAULT_CONTROLLER,
-                                        &controller_obj)) {
-    v8wrap::throw_type_error(isolate,
-                             "setupReadableStreamDefaultControllerFromSource: create "
-                             "ReadableStreamDefaultController object failed");
+                                        &controller_obj, controller)) {
+    v8wrap::throw_type_error(isolate, "create ReadableStreamDefaultController object failed");
     return;
   }
-  v8wrap::set_ptr(controller_obj.As<v8::Object>(), controller);
+  controller->js_object_.Set(isolate, controller_obj.As<v8::Object>());
 
   // 9. Let startResult be the result of performing startAlgorithm. (This may
   //    throw an exception.)
@@ -127,7 +256,6 @@ void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackIn
   // The conversion of startResult to a promise happens inside start_algorithm
   // in this implementation.
   auto startPromise = controller->source_->call_start(controller_obj.As<v8::Object>());
-
   v8wrap::promise_then(
       isolate, startPromise,
       v8wrap::new_function(isolate, controller_startAlgorithm_resolved, controller),

@@ -55,7 +55,7 @@ class IsolateData {
                            const std::string &name);
 
   static bool NewInstance(v8::Local<v8::Context> context, const std::string &name,
-                          v8::Local<v8::Value> *out);
+                          v8::Local<v8::Value> *out, void *data = nullptr);
 
  public:
   void setClassTemplate(const std::string &name, v8::Local<v8::FunctionTemplate> fnTpl);

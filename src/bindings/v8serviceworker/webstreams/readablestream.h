@@ -16,6 +16,7 @@
 namespace v8serviceworker {
 
 class ReadableStreamDefaultController;
+class ReadableStreamGenericReader;
 
 enum ReadableStreamState {
   ReadableStreamState_Readable,
@@ -26,6 +27,10 @@ enum ReadableStreamState {
 class ReadableStream : public common::HeapObject {
  public:
   size_t getDesiredSize();
+
+ public:
+  bool isLocked() { return reader_ != nullptr; }
+  size_t getNumReadRequests();
 
  public:
   ReadableStreamState state_ = ReadableStreamState_Readable;
@@ -41,7 +46,7 @@ class ReadableStream : public common::HeapObject {
   size_t get_queue_total_size() { return 0; }
 
  private:
-  void *reader_ = nullptr;
+  ReadableStreamGenericReader *reader_ = nullptr;
   std::string storeError_ = "";
   bool disturbed_ = false;
 };

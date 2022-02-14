@@ -58,6 +58,13 @@ static T *get_ptr(v8::Local<v8::Object> handle) {
   return static_cast<T *>(ptr);
 }
 
+template <class T>
+static T *get_ptr(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  assert(args.Data()->IsExternal());
+  void *ptr = args.Data().As<v8::External>()->Value();
+  return static_cast<T *>(ptr);
+}
+
 v8::Local<v8::String> new_string(v8::Isolate *isolate, const char *chars, size_t length);
 v8::Local<v8::String> new_string(v8::Isolate *isolate, const std::string &str);
 std::string get_string(v8::Isolate *isolate, v8::Local<v8::Value> value);

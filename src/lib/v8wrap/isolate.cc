@@ -5,6 +5,7 @@
  */
 
 #include <lib/v8wrap/isolate.h>
+#include <lib/v8wrap/js_value.h>
 
 namespace v8wrap {
 v8::Isolate *new_isolate(v8::ArrayBuffer::Allocator *allocator, size_t memory_size) {
@@ -59,7 +60,7 @@ IsolateData *IsolateData::Get(v8::Isolate *isolate) {
 }
 
 bool IsolateData::NewInstance(v8::Local<v8::Context> context, const std::string &name,
-                              v8::Local<v8::Value> *out) {
+                              v8::Local<v8::Value> *out, void *data) {
   auto isolateData = Get(context->GetIsolate());
   if (isolateData == nullptr) {
     return false;
@@ -68,7 +69,13 @@ bool IsolateData::NewInstance(v8::Local<v8::Context> context, const std::string 
   if (class_template.IsEmpty()) {
     return false;
   }
-  return class_template->InstanceTemplate()->NewInstance(context).ToLocal(out);
+  if (!class_template->InstanceTemplate()->NewInstance(context).ToLocal(out)) {
+    return false;
+  }
+  if (data != nullptr) {
+    set_ptr((*out).As<v8::Object>(), data);
+  }
+  return true;
 }
 
 bool IsolateData::IsInstanceOf(v8::Local<v8::Context> context, v8::Local<v8::Value> value,

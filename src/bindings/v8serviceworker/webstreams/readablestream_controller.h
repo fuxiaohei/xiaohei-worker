@@ -21,15 +21,23 @@ class UnderlyingSource;
 class ReadableStreamDefaultController : public common::HeapObject {
  public:
   size_t get_queue_total_size();
+  size_t getDesiredSize() {
+    if (stream_ == nullptr) return 0;
+    return stream_->getDesiredSize();
+  }
 
  public:
   bool closeRequested_ = false;
-  bool pullAgain_ = false;
+  bool pull_again_ = false;
   bool pulling_ = false;
   bool started_ = false;
 
+  bool is_close_requested_ = false;
+
   ReadableStream *stream_ = nullptr;
   UnderlyingSource *source_ = nullptr;
+
+  v8::Eternal<v8::Object> js_object_;
 
  private:
   friend class common::Heap;
