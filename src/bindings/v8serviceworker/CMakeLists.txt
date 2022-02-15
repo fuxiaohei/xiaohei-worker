@@ -15,6 +15,7 @@ add_library(worker_v8serviceworker
     webstreams/webstreams.cc
     webstreams/readablestream.cc
     webstreams/readablestream_controller.cc
+    webstreams/bytestream_controller.cc
     webstreams/underlying_source.cc
     webstreams/strategy.cc
 )

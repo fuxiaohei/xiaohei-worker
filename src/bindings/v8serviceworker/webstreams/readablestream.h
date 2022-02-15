@@ -32,6 +32,11 @@ class ReadableStream : public common::HeapObject {
   bool isLocked() { return reader_ != nullptr; }
   size_t getNumReadRequests();
 
+  void setSizeAlgorithm(v8::Local<v8::Function> sizeAlgorithm) {
+    sizeAlgorithm_.Set(sizeAlgorithm->GetIsolate(), sizeAlgorithm);
+  }
+  void setHighWaterMark(size_t highWaterMark) { highWaterMark_ = highWaterMark; }
+
  public:
   ReadableStreamState state_ = ReadableStreamState_Readable;
   ReadableStreamDefaultController *controller_ = nullptr;
@@ -49,6 +54,9 @@ class ReadableStream : public common::HeapObject {
   ReadableStreamGenericReader *reader_ = nullptr;
   std::string storeError_ = "";
   bool disturbed_ = false;
+
+  size_t highWaterMark_ = 1;
+  v8::Eternal<v8::Function> sizeAlgorithm_;
 };
 
 v8::Local<v8::FunctionTemplate> create_readablestream_template(v8wrap::IsolateData *isolateData);

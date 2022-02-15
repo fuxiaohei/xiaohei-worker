@@ -42,4 +42,43 @@ v8::Local<v8::FunctionTemplate> create_countqueuing_strategy_template(
   return strategyTemplate;
 }
 
+v8::Local<v8::Object> create_countqueuing_strategy_instance(v8::Local<v8::Context> context) {
+  v8::Local<v8::Value> strategy_obj;
+  if (!v8wrap::IsolateData::NewInstance(context, CLASS_READABLE_STREAM_DEFAULT_CONTROLLER,
+                                        &strategy_obj, nullptr)) {
+    v8wrap::throw_type_error(context->GetIsolate(), "create CountQueuingStrategy object failed");
+    return v8::Local<v8::Object>();
+  }
+  return strategy_obj.As<v8::Object>();
+}
+
+v8::Local<v8::Function> make_countqueuing_strategy_size_algorithm(v8::Local<v8::Object> object) {
+  if (v8wrap::has_property(object, "size")) {
+    auto sizeValue = v8wrap::get_property(object, "size");
+    if (!sizeValue->IsFunction()) {
+      v8wrap::throw_type_error(object->GetIsolate(), "size must be a function");
+      return v8::Local<v8::Function>();
+    }
+    return sizeValue.As<v8::Function>();
+  }
+  return v8wrap::new_function(object->GetIsolate(), countqueuing_strategy_js_size, nullptr);
+}
+
+size_t make_countqueuing_strategy_high_water_mark(v8::Local<v8::Object> object,
+                                                  size_t defaultValue) {
+  if (v8wrap::has_property(object, "highWaterMark")) {
+    auto value = v8wrap::get_property(object, "highWaterMark");
+    if (value->IsUndefined()) {
+      return defaultValue;
+    }
+    return v8wrap::get_int32(value);
+  }
+  return defaultValue;
+}
+
+size_t make_bytelengthqueuing_strategy_high_water_mark(v8::Local<v8::Object> object,
+                                                       size_t defaultValue) {
+  return make_countqueuing_strategy_high_water_mark(object, defaultValue);
+}
+
 }  // namespace v8serviceworker

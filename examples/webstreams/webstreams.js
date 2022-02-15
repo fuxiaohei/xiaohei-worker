@@ -14,7 +14,8 @@ addEventListener("fetch", async event => {
         },
         cancel: function (controller) {
 
-        }
+        },
+        // type: "bytes"
     }, queueingStrategy);
 
     let res = {
