@@ -9,6 +9,8 @@
 #include <common/heap.h>
 #include <v8.h>
 
+#include <string>
+
 namespace v8serviceworker {
 
 class UnderlyingSource : public common::HeapObject {

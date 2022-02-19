@@ -94,11 +94,12 @@ int MainContext::parse_flags(int argc, char **argv) {
   // long options
   static option_t long_options[] = {{'h', "help", NO_ARGUMENT},
                                     {'v', "version", NO_ARGUMENT},
+                                    {'d', "debug", NO_ARGUMENT},
                                     {'c', "configfile", REQUIRED_ARGUMENT}};
 
   auto print_version = []() {
     printf("%s %s (%s)\nlibhv %s\nv8 %s\n", "worker", "0.1.0", "alpha", hv_compile_version(),
-           "???");
+           v8wrap::get_version());
   };
   auto print_help = []() { printf("help ???\n"); };
 
@@ -112,13 +113,19 @@ int MainContext::parse_flags(int argc, char **argv) {
   // help
   if (get_arg("h")) {
     print_help();
-    return 0;
+    return -1;
   }
 
   // version
   if (get_arg("v")) {
     print_version();
-    return 0;
+    return -1;
+  }
+
+  // debug
+  if (get_arg("d")) {
+    hlog_set_level(LOG_LEVEL_DEBUG);
+    logger_enable_color(hv_default_logger(), 1);
   }
 
   // config file

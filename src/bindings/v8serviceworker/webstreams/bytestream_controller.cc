@@ -11,5 +11,5 @@ namespace v8serviceworker {
 
 void setupReadableByteStreamControllerFromSource(const v8::FunctionCallbackInfo<v8::Value> &args,
                                                  ReadableStream *rs) {}
-                                                 
+
 }  // namespace v8serviceworker
