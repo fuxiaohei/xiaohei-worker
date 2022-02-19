@@ -18,12 +18,39 @@ namespace v8serviceworker {
 
 // --- ReadableStream ---
 
-size_t ReadableStream::getDesiredSize() { return get_high_water_mark() - get_queue_total_size(); }
+size_t ReadableStream::getDesiredSize() {
+  hlogd("ReadableStream::getDesiredSize(), highWaterMark: %d, queue_total_size:%d", highWaterMark_,
+        get_queue_total_size());
+  return highWaterMark_ - get_queue_total_size();
+}
 
 size_t ReadableStream::getNumReadRequests() {
   printf("ReadableStream::getNumReadRequests():%p\n", reader_);
   assert(reader_ != nullptr);
   return reader_->getReadRequestsSize();
+}
+
+int64_t ReadableStream::callSizeAlgorithm(v8::Local<v8::Context> context) {
+  auto fn = sizeAlgorithm_.Get(context->GetIsolate());
+
+  v8::Local<v8::Value> args[0];
+  auto maybeResult = fn->Call(context, context->Global(), 0, args);
+  if (maybeResult.IsEmpty()) {
+    return -1;
+  }
+
+  auto result = maybeResult.ToLocalChecked();
+  if (result->IsNumber()) {
+    return result->IntegerValue(context).FromJust();
+  }
+  return -1;
+}
+
+int64_t ReadableStream::get_queue_total_size() {
+  if (controller_ != nullptr) {
+    return controller_->queue_total_size_;
+  }
+  return 0;
 }
 
 // --- ReadableStream Js Methods --
@@ -55,7 +82,7 @@ static void readablestream_js_constructor(const v8::FunctionCallbackInfo<v8::Val
       v8wrap::throw_type_error(args.GetIsolate(), "second argument must be a Strategy object");
       return;
     }
-    strategy = create_countqueuing_strategy_instance(context);
+    strategy = create_countqueuing_strategy_instance(context, args[1]);
   }
 
   // 4. Let type be ? GetV(underlyingSource, "type").

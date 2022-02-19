@@ -17,6 +17,7 @@ namespace v8serviceworker {
 
 class ReadableStream;
 class UnderlyingSource;
+class QueueChunk;
 
 class ReadableStreamDefaultController : public common::HeapObject {
  public:
@@ -25,6 +26,7 @@ class ReadableStreamDefaultController : public common::HeapObject {
     if (stream_ == nullptr) return 0;
     return stream_->getDesiredSize();
   }
+  void enqueue(v8::Isolate *isolate, v8::Local<v8::Value> value, int64_t size);
 
  public:
   bool closeRequested_ = false;
@@ -39,13 +41,15 @@ class ReadableStreamDefaultController : public common::HeapObject {
 
   v8::Eternal<v8::Object> js_object_;
 
+  int64_t queue_total_size_ = 0;
+
  private:
   friend class common::Heap;
   ReadableStreamDefaultController() {}
   ~ReadableStreamDefaultController() {}
 
  private:
-  std::vector<int> queue_;
+  std::vector<QueueChunk *> queue_;
 };
 
 v8::Local<v8::FunctionTemplate> create_readablestream_controller_template(
@@ -58,5 +62,10 @@ bool readableStreamDefaultControllerCanCloseOrEnqueue(ReadableStreamDefaultContr
 void readableStreamDefaultControllerCallPullIfNeeded(
     const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller);
 bool readableStreamDefaultControllerShouldCallPull(ReadableStreamDefaultController *controller);
+void readableStreamDefaultControllerError(ReadableStreamDefaultController *controller,
+                                          v8::Local<v8::Value> error);
+void readableStreamDefaultControllerEnqueueValueWithSize(
+    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller,
+    v8::Local<v8::Value> chunk, int64_t chunkSize);
 
 }  // namespace v8serviceworker

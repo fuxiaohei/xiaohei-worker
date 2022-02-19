@@ -80,7 +80,6 @@ v8::Local<v8::Promise> UnderlyingSource::call_algorithm(v8::Local<v8::Object> co
 }
 
 UnderlyingSource *UnderlyingSource::setup(v8::Local<v8::Object> object) {
-  printf("setupUnderlyingSource\n");
   auto isolate = object->GetIsolate();
   auto context = isolate->GetCurrentContext();
   auto source = v8rt::allocObject<UnderlyingSource>(isolate);
@@ -90,8 +89,6 @@ UnderlyingSource *UnderlyingSource::setup(v8::Local<v8::Object> object) {
                              get_algorithm(isolate, object, "pull", underlying_source_pull));
   source->cancelAlgorithm_.Set(isolate,
                                get_algorithm(isolate, object, "cancel", underlying_source_cancel));
-  /*source->sizeAlgorithm_.Set(isolate,
-                             get_algorithm(isolate, object, "size", underlying_source_size));*/
   return source;
 }
 

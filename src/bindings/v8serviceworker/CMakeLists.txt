@@ -18,6 +18,7 @@ add_library(worker_v8serviceworker
     webstreams/bytestream_controller.cc
     webstreams/underlying_source.cc
     webstreams/strategy.cc
+    webstreams/queue_chunk.cc
 )
 
 target_include_directories(worker_v8serviceworker PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

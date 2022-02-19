@@ -10,8 +10,10 @@
 
 int main(int argc, char **argv) {
   // set logger handler
-  hlog_set_level(LOG_LEVEL_INFO);
+  hlog_set_level(LOG_LEVEL_DEBUG);
   hlog_set_handler(stdout_logger);
+  logger_enable_color(hv_default_logger(), 1);
+
   // init main, use for commandline
   return core::MainContext::Run(argc, argv);
 }

@@ -50,6 +50,14 @@ int32_t get_int32(v8::Local<v8::Value> value) {
   return value->Int32Value(context).FromJust();
 }
 
+int64_t get_int64(v8::Local<v8::Value> value) {
+  if (!value->IsNumber()) {
+    return 0;
+  }
+  v8::Local<v8::Context> context;
+  return value->IntegerValue(context).FromJust();
+}
+
 void get_exception(v8::Local<v8::Context> context, v8::TryCatch *try_catch, std::string *message,
                    std::string *stack) {
   if (try_catch->Exception().IsEmpty()) {

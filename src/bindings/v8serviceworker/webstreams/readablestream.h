@@ -26,16 +26,16 @@ enum ReadableStreamState {
 
 class ReadableStream : public common::HeapObject {
  public:
-  size_t getDesiredSize();
-
- public:
   bool isLocked() { return reader_ != nullptr; }
   size_t getNumReadRequests();
+  size_t getDesiredSize();
 
   void setSizeAlgorithm(v8::Local<v8::Function> sizeAlgorithm) {
     sizeAlgorithm_.Set(sizeAlgorithm->GetIsolate(), sizeAlgorithm);
   }
-  void setHighWaterMark(size_t highWaterMark) { highWaterMark_ = highWaterMark; }
+  int64_t callSizeAlgorithm(v8::Local<v8::Context> context);
+
+  void setHighWaterMark(int64_t highWaterMark) { highWaterMark_ = highWaterMark; }
 
  public:
   ReadableStreamState state_ = ReadableStreamState_Readable;
@@ -47,15 +47,14 @@ class ReadableStream : public common::HeapObject {
   ~ReadableStream() {}
 
  private:
-  size_t get_high_water_mark() { return 1; }
-  size_t get_queue_total_size() { return 0; }
+  int64_t get_queue_total_size();
 
  private:
   ReadableStreamGenericReader *reader_ = nullptr;
   std::string storeError_ = "";
   bool disturbed_ = false;
 
-  size_t highWaterMark_ = 1;
+  int64_t highWaterMark_ = 1;
   v8::Eternal<v8::Function> sizeAlgorithm_;
 };
 

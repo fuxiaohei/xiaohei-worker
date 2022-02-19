@@ -72,6 +72,7 @@ std::string to_string(v8::Local<v8::Context> context, v8::Local<v8::Value> value
 
 v8::Local<v8::Integer> new_int32(v8::Isolate *isolate, int32_t value);
 int32_t get_int32(v8::Local<v8::Value> value);
+int64_t get_int64(v8::Local<v8::Value> value);
 
 v8::Local<v8::Value> new_type_error(v8::Isolate *isolate, const std::string &message);
 void throw_type_error(v8::Isolate *isolate, const std::string &message);

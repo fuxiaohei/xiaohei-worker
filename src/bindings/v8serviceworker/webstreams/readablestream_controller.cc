@@ -5,6 +5,7 @@
  */
 
 #include <bindings/v8serviceworker/serviceworker.h>
+#include <bindings/v8serviceworker/webstreams/queue_chunk.h>
 #include <bindings/v8serviceworker/webstreams/readablestream.h>
 #include <bindings/v8serviceworker/webstreams/readablestream_controller.h>
 #include <bindings/v8serviceworker/webstreams/underlying_source.h>
@@ -42,7 +43,6 @@ static void readablestream_controller_js_close(const v8::FunctionCallbackInfo<v8
 static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<v8::Value> &args) {
   using v8serviceworker::ReadableStreamDefaultController;
   auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args.Holder());
-  printf("readablestream_controller_js_enqueue:%p\n", controller);
 
   // https://streams.spec.whatwg.org/#readable-stream-default-controller-enqueue
   // 1. Let stream be controller.[[controlledReadableStream]].
@@ -62,7 +62,17 @@ static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<
     //   a. Let result be the result of performing controller.
     //      [[strategySizeAlgorithm]], passing in chunk, and interpreting the
     //      result as an ECMAScript completion value.
+    //   b. If result is an abrupt completion,
+    auto sizeValue = stream->callSizeAlgorithm(args.GetIsolate()->GetCurrentContext());
+    auto chunk = args[0];
+    //  c. Let chunkSize be result.[[Value]].
+    //  d. Let enqueueResult be EnqueueValueWithSize(controller, chunk,
+    //     chunkSize).
+    readableStreamDefaultControllerEnqueueValueWithSize(args, controller, chunk, sizeValue);
   }
+
+  // 5. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(controller).
+  readableStreamDefaultControllerCallPullIfNeeded(args, controller);
 }
 
 static void readablestream_controller_js_error(const v8::FunctionCallbackInfo<v8::Value> &args) {
@@ -70,6 +80,17 @@ static void readablestream_controller_js_error(const v8::FunctionCallbackInfo<v8
 }
 
 namespace v8serviceworker {
+
+// --- ReadableStreamDefaultController method ---
+
+void ReadableStreamDefaultController::enqueue(v8::Isolate *isolate, v8::Local<v8::Value> value,
+                                              int64_t size) {
+  auto chunk = v8rt::allocObject<QueueChunk>(isolate);
+  chunk->setValue(isolate, value, size);
+  queue_.push_back(chunk);
+}
+
+// --- ReadableStreamDefaultController functions ---
 
 v8::Local<v8::FunctionTemplate> create_readablestream_controller_template(
     v8wrap::IsolateData *isolateData) {
@@ -160,11 +181,13 @@ void readableStreamDefaultControllerCallPullIfNeeded(
   bool shouldPull = readableStreamDefaultControllerShouldCallPull(controller);
   // 2. If shouldPull is false, return.
   if (!shouldPull) {
+    hlogd("readableStreamDefaultControllerCallPullIfNeeded: shouldPull is false");
     return;
   }
 
   // 3. If controller.[[pulling]] is true,
   if (controller->pulling_) {
+    hlogd("readableStreamDefaultControllerCallPullIfNeeded: pull_again_ set true");
     controller->pull_again_ = true;
     return;
   }
@@ -183,7 +206,29 @@ void readableStreamDefaultControllerCallPullIfNeeded(
       v8wrap::new_function(isolate, controller_pullAlgorithm_rejected, controller));
 }
 
-static void readableStreamDefaultControllerError(ReadableStreamDefaultController *controller) {
+void readableStreamDefaultControllerEnqueueValueWithSize(
+    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller,
+    v8::Local<v8::Value> chunk, int64_t chunkSize) {
+  auto isolate = args.GetIsolate();
+  // https://streams.spec.whatwg.org/#enqueue-value-with-size
+  // 3. If ! IsFiniteNonNegativeNumber(size) is false, throw a RangeError
+  //    exception.
+  if (chunkSize < 1) {
+    auto exception =
+        v8::Exception::RangeError(v8wrap::new_string(isolate, "size must be a positive number"));
+    readableStreamDefaultControllerError(controller, exception);
+    return;
+  }
+  // 4. Append Record {[[value]]: value, [[size]]: size} as the last element of
+  //    container.[[queue]].
+  controller->enqueue(isolate, chunk, chunkSize);
+
+  // 5. Set container.[[queueTotalSize]] to container.[[queueTotalSize]] + size.
+  controller->queue_total_size_ += chunkSize;
+}
+
+void readableStreamDefaultControllerError(ReadableStreamDefaultController *controller,
+                                          v8::Local<v8::Value> error) {
   // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
   // 1. Let stream be controller.[[controlledReadableStream]].
   auto stream = controller->stream_;
@@ -219,7 +264,11 @@ static void controller_startAlgorithm_rejected(const v8::FunctionCallbackInfo<v8
   //  12. Upon rejection of startPromise with reason r,
   //    a. Perform ! ReadableStreamDefaultControllerError(controller, r).
   auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args);
-  readableStreamDefaultControllerError(controller);
+  if (args.Length() > 0) {
+    auto error = args[0];
+    readableStreamDefaultControllerError(controller, error);
+  }
+  readableStreamDefaultControllerError(controller, v8::Local<v8::Value>());
 }
 
 void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackInfo<v8::Value> &args,

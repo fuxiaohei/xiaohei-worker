@@ -125,7 +125,6 @@ int MainContext::parse_flags(int argc, char **argv) {
   // debug
   if (get_arg("d")) {
     hlog_set_level(LOG_LEVEL_DEBUG);
-    logger_enable_color(hv_default_logger(), 1);
   }
 
   // config file

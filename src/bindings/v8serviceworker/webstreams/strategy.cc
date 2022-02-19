@@ -42,14 +42,26 @@ v8::Local<v8::FunctionTemplate> create_countqueuing_strategy_template(
   return strategyTemplate;
 }
 
-v8::Local<v8::Object> create_countqueuing_strategy_instance(v8::Local<v8::Context> context) {
+v8::Local<v8::Object> create_countqueuing_strategy_instance(v8::Local<v8::Context> context,
+                                                            v8::Local<v8::Value> value) {
   v8::Local<v8::Value> strategy_obj;
   if (!v8wrap::IsolateData::NewInstance(context, CLASS_READABLE_STREAM_DEFAULT_CONTROLLER,
                                         &strategy_obj, nullptr)) {
     v8wrap::throw_type_error(context->GetIsolate(), "create CountQueuingStrategy object failed");
     return v8::Local<v8::Object>();
   }
-  return strategy_obj.As<v8::Object>();
+  auto obj = strategy_obj.As<v8::Object>();
+  if (value->IsObject()) {
+    if (v8wrap::has_property(value.As<v8::Object>(), "highWaterMark")) {
+      auto highWaterMark = v8wrap::get_property(value.As<v8::Object>(), "highWaterMark");
+      v8wrap::set_property(obj, "highWaterMark", highWaterMark);
+    }
+    if (v8wrap::has_property(value.As<v8::Object>(), "size")) {
+      auto size = v8wrap::get_property(value.As<v8::Object>(), "size");
+      v8wrap::set_property(obj, "size", size);
+    }
+  }
+  return obj;
 }
 
 v8::Local<v8::Function> make_countqueuing_strategy_size_algorithm(v8::Local<v8::Object> object) {
@@ -64,20 +76,20 @@ v8::Local<v8::Function> make_countqueuing_strategy_size_algorithm(v8::Local<v8::
   return v8wrap::new_function(object->GetIsolate(), countqueuing_strategy_js_size, nullptr);
 }
 
-size_t make_countqueuing_strategy_high_water_mark(v8::Local<v8::Object> object,
-                                                  size_t defaultValue) {
+int64_t make_countqueuing_strategy_high_water_mark(v8::Local<v8::Object> object,
+                                                   int64_t defaultValue) {
   if (v8wrap::has_property(object, "highWaterMark")) {
     auto value = v8wrap::get_property(object, "highWaterMark");
     if (value->IsUndefined()) {
       return defaultValue;
     }
-    return v8wrap::get_int32(value);
+    return v8wrap::get_int64(value);
   }
   return defaultValue;
 }
 
-size_t make_bytelengthqueuing_strategy_high_water_mark(v8::Local<v8::Object> object,
-                                                       size_t defaultValue) {
+int64_t make_bytelengthqueuing_strategy_high_water_mark(v8::Local<v8::Object> object,
+                                                        int64_t defaultValue) {
   return make_countqueuing_strategy_high_water_mark(object, defaultValue);
 }
 
