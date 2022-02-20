@@ -27,6 +27,9 @@ class ReadableStreamDefaultController : public common::HeapObject {
     return stream_->getDesiredSize();
   }
   void enqueue(v8::Isolate *isolate, v8::Local<v8::Value> value, int64_t size);
+  void resetQueue();
+  bool isQueueEmpty() { return queue_.size() == 0; }
+  void clearAlgorithms();
 
  public:
   bool closeRequested_ = false;
@@ -64,6 +67,7 @@ void readableStreamDefaultControllerCallPullIfNeeded(
 bool readableStreamDefaultControllerShouldCallPull(ReadableStreamDefaultController *controller);
 void readableStreamDefaultControllerError(ReadableStreamDefaultController *controller,
                                           v8::Local<v8::Value> error);
+
 void readableStreamDefaultControllerEnqueueValueWithSize(
     const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller,
     v8::Local<v8::Value> chunk, int64_t chunkSize);

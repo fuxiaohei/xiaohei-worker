@@ -37,7 +37,32 @@ static void readablestream_controller_js_desiredSize_getter(
 }
 
 static void readablestream_controller_js_close(const v8::FunctionCallbackInfo<v8::Value> &args) {
-  printf("readablestream_controller_js_close\n");
+  using v8serviceworker::ReadableStreamDefaultController;
+
+  auto isolate = args.GetIsolate();
+  auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args.Holder());
+
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-close
+  // 1. Let stream be controller.[[controlledReadableStream]].
+  auto stream = controller->stream_;
+  // 2. Assert: ! ReadableStreamDefaultControllerCanCloseOrEnqueue(controller)
+  //    is true.
+  if (readableStreamDefaultControllerCanCloseOrEnqueue(controller)) {
+    v8wrap::throw_type_error(isolate,
+                             "can not close a stream that has been requested to be closed");
+    return;
+  }
+  // 3. Set controller.[[closeRequested]] to true.
+  controller->is_close_requested_ = true;
+
+  // 4. If controller.[[queue]] is empty,
+  if (controller->isQueueEmpty()) {
+    // a. Perform ! ReadableStreamDefaultControllerClearAlgorithms(controller).
+    controller->clearAlgorithms();
+
+    // b. Perform ! ReadableStreamClose(stream).
+    stream->setClose(isolate);
+  }
 }
 
 static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<v8::Value> &args) {
@@ -76,7 +101,30 @@ static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<
 }
 
 static void readablestream_controller_js_error(const v8::FunctionCallbackInfo<v8::Value> &args) {
-  printf("readablestream_controller_js_error\n");
+  using v8serviceworker::ReadableStreamDefaultController;
+
+  auto isolate = args.GetIsolate();
+  auto controller = v8wrap::get_ptr<ReadableStreamDefaultController>(args.Holder());
+
+  // https://streams.spec.whatwg.org/#readable-stream-default-controller-error
+  // 1. Let stream be controller.[[controlledReadableStream]].
+  auto stream = controller->stream_;
+  // 2. If stream.[[state]] is not "readable", return.
+  using v8serviceworker::ReadableStreamState_Readable;
+  if (stream->state_ != ReadableStreamState_Readable) {
+    return;
+  }
+
+  // 3. Perform ! ResetQueue(controller).
+  controller->resetQueue();
+  // 4. Perform ! ReadableStreamDefaultControllerClearAlgorithms(controller).
+  controller->clearAlgorithms();
+  // 5. Perform ! ReadableStreamError(stream, e).
+  if (args.Length() > 0) {
+    stream->setError(isolate, args[0]);
+  } else {
+    stream->setError(isolate, v8::Local<v8::Value>());
+  }
 }
 
 namespace v8serviceworker {
@@ -89,6 +137,13 @@ void ReadableStreamDefaultController::enqueue(v8::Isolate *isolate, v8::Local<v8
   chunk->setValue(isolate, value, size);
   queue_.push_back(chunk);
 }
+
+void ReadableStreamDefaultController::resetQueue() {
+  queue_.clear();
+  queue_total_size_ = 0;
+}
+
+void ReadableStreamDefaultController::clearAlgorithms() {}
 
 // --- ReadableStreamDefaultController functions ---
 
@@ -115,7 +170,6 @@ static void controller_pullAlgorithm_resolved(const v8::FunctionCallbackInfo<v8:
   // 7. Upon fulfillment of pullPromise,
   //   a. Set controller.[[pulling]] to false.
   controller->pulling_ = false;
-  printf("controller_pullAlgorithm_resolved, again:%d\n", controller->pull_again_);
 
   //   b. If controller.[[pullAgain]] is true,
   if (controller->pull_again_) {

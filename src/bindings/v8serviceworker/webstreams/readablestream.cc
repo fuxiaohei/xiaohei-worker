@@ -53,6 +53,26 @@ int64_t ReadableStream::get_queue_total_size() {
   return 0;
 }
 
+void ReadableStream::setClose(v8::Isolate *isolate) {
+  // https://streams.spec.whatwg.org/#readable-stream-close
+  // 1. Assert: stream.[[state]] is "readable".
+
+  // 2. Set stream.[[state]] to "closed".
+  state_ = ReadableStreamState_Closed;
+
+  // 3. Let reader be stream.[[reader]].
+  // 4. If reader is undefined, return.
+  if (reader_ == nullptr) {
+    return;
+  }
+
+  // TODO(fxh): 5. If ! IsReadableStreamDefaultReader(reader) is true,
+  // 6. Resolve reader.[[closedPromise]] with undefined.
+}
+
+void ReadableStream::setError(v8::Isolate *isolate, v8::Local<v8::Value> error) {}
+void ReadableStream::setError(v8::Isolate *isolate) {}
+
 // --- ReadableStream Js Methods --
 
 static void readablestream_js_constructor(const v8::FunctionCallbackInfo<v8::Value> &args) {

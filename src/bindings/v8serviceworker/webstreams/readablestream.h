@@ -37,6 +37,10 @@ class ReadableStream : public common::HeapObject {
 
   void setHighWaterMark(int64_t highWaterMark) { highWaterMark_ = highWaterMark; }
 
+  void setClose(v8::Isolate *isolate);
+  void setError(v8::Isolate *isolate, v8::Local<v8::Value> error);
+  void setError(v8::Isolate *isolate);
+
  public:
   ReadableStreamState state_ = ReadableStreamState_Readable;
   ReadableStreamDefaultController *controller_ = nullptr;
