@@ -7,8 +7,9 @@
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <bindings/v8serviceworker/webstreams/bytestream_controller.h>
 #include <bindings/v8serviceworker/webstreams/readablestream.h>
-#include <bindings/v8serviceworker/webstreams/readablestream_controller.h>
-#include <bindings/v8serviceworker/webstreams/readablestream_reader.h>
+#include <bindings/v8serviceworker/webstreams/readablestream_byob_reader.h>
+#include <bindings/v8serviceworker/webstreams/readablestream_default_controller.h>
+#include <bindings/v8serviceworker/webstreams/readablestream_default_reader.h>
 #include <bindings/v8serviceworker/webstreams/strategy.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/js_object.h>
@@ -70,8 +71,27 @@ void ReadableStream::setClose(v8::Isolate *isolate) {
   // 6. Resolve reader.[[closedPromise]] with undefined.
 }
 
-void ReadableStream::setError(v8::Isolate *isolate, v8::Local<v8::Value> error) {}
-void ReadableStream::setError(v8::Isolate *isolate) {}
+void ReadableStream::setError(v8::Isolate *isolate, v8::Local<v8::Value> error) {
+  // https://streams.spec.whatwg.org/#readable-stream-error
+  // 1. Assert: stream.[[state]] is "readable".
+  if (state_ != ReadableStreamState_Readable) {
+    return;
+  }
+  // 2. Set stream.[[state]] to "errored".
+  state_ = ReadableStreamState_Errored;
+  // 3. Set stream.[[storedError]] to e.
+  stored_error_.Set(isolate, error);
+  // 4. Let reader be stream.[[reader]].
+  // 5. If reader is undefined, return.
+  if (!reader_) {
+    return;
+  }
+  // TODO(fxh): 6,7,8,9
+}
+
+v8::Local<v8::Value> ReadableStream::getError(v8::Isolate *isolate) {
+  return stored_error_.Get(isolate);
+}
 
 // --- ReadableStream Js Methods --
 
@@ -81,6 +101,7 @@ static void readablestream_js_constructor(const v8::FunctionCallbackInfo<v8::Val
   auto isolate = args.GetIsolate();
   auto context = isolate->GetCurrentContext();
   auto stream = v8rt::allocObject<ReadableStream>(isolate);
+  v8wrap::set_ptr(args.Holder(), stream);
 
   v8::Local<v8::Object> underlyingSource;
   if (args.Length() >= 1) {
@@ -134,9 +155,54 @@ static void readablestream_js_constructor(const v8::FunctionCallbackInfo<v8::Val
   setupReadableByteStreamControllerFromSource(args, stream);
 }
 
+static void readablestream_js_locked_getter(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  auto stream = v8wrap::get_ptr<ReadableStream>(args.Holder());
+  args.GetReturnValue().Set(stream->isLocked());
+}
+
+static void readablestream_js_getReader(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  if (args.Length() > 0) {
+    if (!args[0]->IsObject()) {
+      v8wrap::throw_type_error(args.GetIsolate(), "first argument must be an options object");
+      return;
+    }
+    auto options = args[0].As<v8::Object>();
+    if (v8wrap::has_property(options, "mode")) {
+      auto mode = v8wrap::get_property(options, "mode");
+      if (!mode->IsString()) {
+        v8wrap::throw_type_error(args.GetIsolate(), "mode must be a string");
+        return;
+      }
+      auto modeStr = v8wrap::get_string(args.GetIsolate(), mode);
+      if (modeStr == "byob") {
+        auto stream = v8wrap::get_ptr<ReadableStream>(args.Holder());
+        auto obj =
+            ReadableStreamBYOBReader::Aqcuire(args.GetIsolate()->GetCurrentContext(), stream);
+        args.GetReturnValue().Set(obj);
+        return;
+      }
+    }
+  }
+
+  auto stream = v8wrap::get_ptr<ReadableStream>(args.Holder());
+  auto obj = ReadableStreamDefaultReader::Aqcuire(args.GetIsolate()->GetCurrentContext(), stream);
+  args.GetReturnValue().Set(obj);
+}
+
+static void readablestream_js_pipeThrough(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void readablestream_js_pipeTo(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void readablestream_js_tee(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void readablestream_js_cancel(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+
 v8::Local<v8::FunctionTemplate> create_readablestream_template(v8wrap::IsolateData *isolateData) {
   v8wrap::ClassBuilder rsBuilder(isolateData->get_isolate(), CLASS_READABLE_STREAM);
   rsBuilder.setConstructor(readablestream_js_constructor);
+  rsBuilder.setAccessorProperty("locked", readablestream_js_locked_getter, nullptr);
+  rsBuilder.setMethod("getReader", readablestream_js_getReader);
+  rsBuilder.setMethod("pipeThrough", readablestream_js_pipeThrough);
+  rsBuilder.setMethod("pipeTo", readablestream_js_pipeTo);
+  rsBuilder.setMethod("tee", readablestream_js_tee);
+  rsBuilder.setMethod("cancel", readablestream_js_cancel);
   auto rsTemplate = rsBuilder.getClassTemplate();
 
   isolateData->setClassTemplate(CLASS_READABLE_STREAM, rsTemplate);

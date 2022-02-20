@@ -18,10 +18,14 @@ addEventListener("fetch", async event => {
         // type: "bytes"
     }, queueingStrategy);
 
+    const reader = readable.getReader();
+
     let res = {
         "readable": readable.toString(),
+        "locked": readable.locked,
         "highWaterMark": queueingStrategy.highWaterMark,
         "size": queueingStrategy.size(),
+        "reader": reader.toString(),
     }
 
     event.respondWith(new Response("hello" + " WebStreams !!\n" + JSON.stringify(res, null, 2)));

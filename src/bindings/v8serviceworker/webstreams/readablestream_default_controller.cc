@@ -7,7 +7,7 @@
 #include <bindings/v8serviceworker/serviceworker.h>
 #include <bindings/v8serviceworker/webstreams/queue_chunk.h>
 #include <bindings/v8serviceworker/webstreams/readablestream.h>
-#include <bindings/v8serviceworker/webstreams/readablestream_controller.h>
+#include <bindings/v8serviceworker/webstreams/readablestream_default_controller.h>
 #include <bindings/v8serviceworker/webstreams/underlying_source.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/js_value.h>

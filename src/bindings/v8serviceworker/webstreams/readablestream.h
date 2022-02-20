@@ -39,7 +39,9 @@ class ReadableStream : public common::HeapObject {
 
   void setClose(v8::Isolate *isolate);
   void setError(v8::Isolate *isolate, v8::Local<v8::Value> error);
-  void setError(v8::Isolate *isolate);
+  v8::Local<v8::Value> getError(v8::Isolate *isolate);
+
+  void setReader(ReadableStreamGenericReader *reader) { reader_ = reader; }
 
  public:
   ReadableStreamState state_ = ReadableStreamState_Readable;
@@ -55,7 +57,7 @@ class ReadableStream : public common::HeapObject {
 
  private:
   ReadableStreamGenericReader *reader_ = nullptr;
-  std::string storeError_ = "";
+  v8::Eternal<v8::Value> stored_error_;
   bool disturbed_ = false;
 
   int64_t highWaterMark_ = 1;
