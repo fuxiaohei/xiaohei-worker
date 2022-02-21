@@ -8,6 +8,7 @@
 #include <bindings/v8serviceworker/webstreams/queue_chunk.h>
 #include <bindings/v8serviceworker/webstreams/readablestream.h>
 #include <bindings/v8serviceworker/webstreams/readablestream_default_controller.h>
+#include <bindings/v8serviceworker/webstreams/stream_promise.h>
 #include <bindings/v8serviceworker/webstreams/underlying_source.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/js_value.h>
@@ -97,7 +98,7 @@ static void readablestream_controller_js_enqueue(const v8::FunctionCallbackInfo<
   }
 
   // 5. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(controller).
-  readableStreamDefaultControllerCallPullIfNeeded(args, controller);
+  readableStreamDefaultControllerCallPullIfNeeded(args.GetIsolate(), controller);
 }
 
 static void readablestream_controller_js_error(const v8::FunctionCallbackInfo<v8::Value> &args) {
@@ -134,16 +135,54 @@ namespace v8serviceworker {
 void ReadableStreamDefaultController::enqueue(v8::Isolate *isolate, v8::Local<v8::Value> value,
                                               int64_t size) {
   auto chunk = v8rt::allocObject<QueueChunk>(isolate);
+  hlogd("ReadableStreamDefaultController::enqueue, chunk:%p", chunk);
   chunk->setValue(isolate, value, size);
-  queue_.push_back(chunk);
+  queue_.push(chunk);
 }
 
 void ReadableStreamDefaultController::resetQueue() {
-  queue_.clear();
+  std::queue<QueueChunk *> empty;
+  queue_.swap(empty);
   queue_total_size_ = 0;
 }
 
 void ReadableStreamDefaultController::clearAlgorithms() {}
+
+QueueChunk *ReadableStreamDefaultController::dequeue() {
+  auto chunk = queue_.front();
+  queue_.pop();
+  queue_total_size_ -= chunk->getSize();
+  if (queue_total_size_ < 0) {
+    queue_total_size_ = 0;
+  }
+  return chunk;
+}
+
+v8::Local<v8::Promise> ReadableStreamDefaultController::pullSteps(v8::Local<v8::Context> context) {
+  auto isolate = context->GetIsolate();
+  // https://streams.spec.whatwg.org/#rs-default-controller-private-pull
+  // 1. Let stream be this.[[stream]].
+  // 2. If this.[[queue]] is not empty,
+  if (!queue_.empty()) {
+    // a. Let chunk be ! DequeueValue(this).
+    auto chunk = dequeue();
+    hlogd("ReadableStreamDefaultController::pullSteps, dequeue, chunk: %p", chunk);
+    // b. If this.[[closeRequested]] is true and this.[[queue]] is empty,
+    if (queue_.empty() && is_close_requested_) {
+      clearAlgorithms();
+      stream_->setClose(isolate);
+    } else {
+      // c. Otherwise, perform !
+      //    ReadableStreamDefaultControllerCallPullIfNeeded(this).
+      readableStreamDefaultControllerCallPullIfNeeded(isolate, this);
+      // d. Return a promise resolved with !
+      //    ReadableStreamCreateReadResult(chunk, false,
+      //    stream.[[reader]].[[forAuthorCode]]).
+      auto result = ReadableStream::CreateReadResult(isolate, chunk->getValue(isolate), false);
+      return StreamPromise::CreateResolved(isolate, result)->getPromise(isolate);
+    }
+  }
+}
 
 // --- ReadableStreamDefaultController functions ---
 
@@ -178,7 +217,7 @@ static void controller_pullAlgorithm_resolved(const v8::FunctionCallbackInfo<v8:
 
     //  ii. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(
     //      controller).
-    readableStreamDefaultControllerCallPullIfNeeded(args, controller);
+    readableStreamDefaultControllerCallPullIfNeeded(args.GetIsolate(), controller);
   }
 }
 static void controller_pullAlgorithm_rejected(const v8::FunctionCallbackInfo<v8::Value> &args) {
@@ -225,10 +264,8 @@ bool readableStreamDefaultControllerShouldCallPull(ReadableStreamDefaultControll
   return desiredSize > 0;
 }
 
-void readableStreamDefaultControllerCallPullIfNeeded(
-    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller) {
-  auto isolate = args.GetIsolate();
-
+void readableStreamDefaultControllerCallPullIfNeeded(v8::Isolate *isolate,
+                                                     ReadableStreamDefaultController *controller) {
   // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
   // 1. Let shouldPull be ! ReadableStreamDefaultControllerShouldCallPull(
   //    controller).
@@ -307,10 +344,11 @@ static void controller_startAlgorithm_resolved(const v8::FunctionCallbackInfo<v8
   //    b. Assert: controller.[[pulling]] is false.
   //    c. Assert: controller.[[pullAgain]] is false.
   controller->started_ = true;
+  hlogd("controller_startAlgorithm_resolved: controller->started_ = true");
 
   //    d. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(
   //       controller).
-  readableStreamDefaultControllerCallPullIfNeeded(args, controller);
+  readableStreamDefaultControllerCallPullIfNeeded(args.GetIsolate(), controller);
 }
 
 static void controller_startAlgorithm_rejected(const v8::FunctionCallbackInfo<v8::Value> &args) {
@@ -345,6 +383,7 @@ void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackIn
   }
 
   auto controller = v8rt::allocObject<ReadableStreamDefaultController>(isolate);
+  hlogd("setupReadableStreamDefaultControllerFromSource, controller:%p", controller);
 
   // 2. Set controller.[[controlledReadableStream]] to stream.
   controller->stream_ = rs;
@@ -376,6 +415,8 @@ void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackIn
   // The conversion of startResult to a promise happens inside start_algorithm
   // in this implementation.
   auto startPromise = controller->source_->call_start(controller_obj.As<v8::Object>());
+  hlogd("setupReadableStreamDefaultControllerFromSource:callStartAlgorithm, controller:%p",
+        controller);
   v8wrap::promise_then(
       isolate, startPromise,
       v8wrap::new_function(isolate, controller_startAlgorithm_resolved, controller),

@@ -33,6 +33,7 @@ class ReadableStreamDefaultReader : public common::HeapObject, public ReadableSt
 
  public:
   void setup(v8::Local<v8::Context> context, ReadableStream *stream);
+  v8::Local<v8::Promise> read(v8::Local<v8::Context> context);
 
  private:
   friend class common::Heap;

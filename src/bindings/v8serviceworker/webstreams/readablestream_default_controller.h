@@ -11,7 +11,7 @@
 #include <v8wrap/isolate.h>
 #include <v8wrap/js_class.h>
 
-#include <vector>
+#include <queue>
 
 namespace v8serviceworker {
 
@@ -20,6 +20,9 @@ class UnderlyingSource;
 class QueueChunk;
 
 class ReadableStreamDefaultController : public common::HeapObject {
+ public:
+  v8::Local<v8::Promise> pullSteps(v8::Local<v8::Context> context);
+
  public:
   size_t get_queue_total_size();
   size_t getDesiredSize() {
@@ -52,7 +55,10 @@ class ReadableStreamDefaultController : public common::HeapObject {
   ~ReadableStreamDefaultController() {}
 
  private:
-  std::vector<QueueChunk *> queue_;
+  QueueChunk *dequeue();
+
+ private:
+  std::queue<QueueChunk *> queue_;
 };
 
 v8::Local<v8::FunctionTemplate> create_readablestream_controller_template(
@@ -62,8 +68,8 @@ void setupReadableStreamDefaultControllerFromSource(const v8::FunctionCallbackIn
                                                     ReadableStream *rs);
 
 bool readableStreamDefaultControllerCanCloseOrEnqueue(ReadableStreamDefaultController *controller);
-void readableStreamDefaultControllerCallPullIfNeeded(
-    const v8::FunctionCallbackInfo<v8::Value> &args, ReadableStreamDefaultController *controller);
+void readableStreamDefaultControllerCallPullIfNeeded(v8::Isolate *isolate,
+                                                     ReadableStreamDefaultController *controller);
 bool readableStreamDefaultControllerShouldCallPull(ReadableStreamDefaultController *controller);
 void readableStreamDefaultControllerError(ReadableStreamDefaultController *controller,
                                           v8::Local<v8::Value> error);

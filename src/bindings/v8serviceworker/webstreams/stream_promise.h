@@ -23,6 +23,11 @@ class StreamPromise : public common::HeapObject {
   void markAsHandled(v8::Isolate* isolate);
   void markAsSilent(v8::Isolate* isolate);
 
+  v8::Local<v8::Promise> getPromise(v8::Isolate* isolate);
+  void setResolver(v8::Isolate* isolate, v8::Local<v8::Promise::Resolver> resolver) {
+    value_.Reset(isolate, resolver);
+  }
+
  private:
   friend class common::Heap;
   StreamPromise() = default;

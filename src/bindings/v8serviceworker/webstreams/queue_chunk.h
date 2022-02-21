@@ -16,6 +16,8 @@ namespace v8serviceworker {
 class QueueChunk : public common::HeapObject {
  public:
   void setValue(v8::Isolate* isolate, v8::Local<v8::Value> value, int64_t size);
+  v8::Local<v8::Value> getValue(v8::Isolate* isolate);
+  int64_t getSize() { return size_; }
 
  private:
   friend class common::Heap;

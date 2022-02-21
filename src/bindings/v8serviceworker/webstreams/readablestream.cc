@@ -93,6 +93,14 @@ v8::Local<v8::Value> ReadableStream::getError(v8::Isolate *isolate) {
   return stored_error_.Get(isolate);
 }
 
+v8::Local<v8::Object> ReadableStream::CreateReadResult(v8::Isolate *isolate,
+                                                       v8::Local<v8::Value> value, bool done) {
+  auto object = v8::Object::New(isolate);
+  v8wrap::set_property(object, "value", value);
+  v8wrap::set_property(object, "done", v8::Boolean::New(isolate, done));
+  return object;
+}
+
 // --- ReadableStream Js Methods --
 
 static void readablestream_js_constructor(const v8::FunctionCallbackInfo<v8::Value> &args) {

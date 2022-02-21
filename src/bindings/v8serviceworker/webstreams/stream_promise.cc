@@ -5,20 +5,54 @@
  */
 
 #include <bindings/v8serviceworker/webstreams/stream_promise.h>
+#include <runtime/v8rt/v8rt.h>
+#include <v8wrap/isolate.h>
+#include <v8wrap/js_value.h>
 
 namespace v8serviceworker {
 
-StreamPromise* StreamPromise::Create(v8::Isolate* isolate) { return nullptr; }
+StreamPromise::~StreamPromise() { value_.Reset(); }
+
+StreamPromise* StreamPromise::Create(v8::Isolate* isolate) {
+  auto resolver = v8::Promise::Resolver::New(isolate->GetCurrentContext()).ToLocalChecked();
+
+  auto sPromise = v8rt::allocObject<StreamPromise>(isolate);
+  sPromise->setResolver(isolate, resolver);
+  return sPromise;
+}
 
 StreamPromise* StreamPromise::CreateResolved(v8::Isolate* isolate, v8::Local<v8::Value> value) {
-  return nullptr;
+  auto resolver = v8wrap::promise_resolved(isolate, value);
+  auto sPromise = v8rt::allocObject<StreamPromise>(isolate);
+  sPromise->setResolver(isolate, resolver);
+  return sPromise;
 }
 
 StreamPromise* StreamPromise::CreateRejected(v8::Isolate* isolate, v8::Local<v8::Value> value) {
-  return nullptr;
+  auto resolver = v8wrap::promise_rejected(isolate, value);
+  auto sPromise = v8rt::allocObject<StreamPromise>(isolate);
+  sPromise->setResolver(isolate, resolver);
+  return sPromise;
 }
 
-void StreamPromise::markAsHandled(v8::Isolate* isolate) {}
-void StreamPromise::markAsSilent(v8::Isolate* isolate) {}
+void StreamPromise::markAsHandled(v8::Isolate* isolate) {
+  auto resolver = value_.Get(isolate);
+  if (resolver.IsEmpty()) {
+    return;
+  }
+  resolver->GetPromise()->MarkAsHandled();
+}
+
+void StreamPromise::markAsSilent(v8::Isolate* isolate) {
+  auto resolver = value_.Get(isolate);
+  if (resolver.IsEmpty()) {
+    return;
+  }
+  resolver->GetPromise()->MarkAsSilent();
+}
+
+v8::Local<v8::Promise> StreamPromise::getPromise(v8::Isolate* isolate) {
+  return value_.Get(isolate)->GetPromise();
+}
 
 };  // namespace v8serviceworker

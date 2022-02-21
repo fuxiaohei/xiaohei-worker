@@ -26,6 +26,9 @@ enum ReadableStreamState {
 
 class ReadableStream : public common::HeapObject {
  public:
+  static v8::Local<v8::Object> CreateReadResult(v8::Isolate *isolate, v8::Local<v8::Value> value, bool done);
+
+ public:
   bool isLocked() { return reader_ != nullptr; }
   size_t getNumReadRequests();
   size_t getDesiredSize();
@@ -46,6 +49,7 @@ class ReadableStream : public common::HeapObject {
  public:
   ReadableStreamState state_ = ReadableStreamState_Readable;
   ReadableStreamDefaultController *controller_ = nullptr;
+  bool is_disturbed_ = false;
 
  private:
   friend class common::Heap;

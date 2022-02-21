@@ -13,6 +13,8 @@ void QueueChunk::setValue(v8::Isolate* isolate, v8::Local<v8::Value> value, int6
   size_ = size;
 }
 
+v8::Local<v8::Value> QueueChunk::getValue(v8::Isolate* isolate) { return value_.Get(isolate); }
+
 QueueChunk::~QueueChunk() { value_.Reset(); }
 
 }  // namespace v8serviceworker

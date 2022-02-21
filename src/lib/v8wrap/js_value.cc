@@ -131,6 +131,14 @@ v8::Local<v8::Promise::Resolver> promise_resolved(v8::Isolate *isolate,
   return resolver;
 }
 
+v8::Local<v8::Promise::Resolver> promise_rejected(v8::Isolate *isolate,
+                                                  v8::Local<v8::Value> value) {
+  auto context = isolate->GetCurrentContext();
+  auto resolver = v8::Promise::Resolver::New(context).ToLocalChecked();
+  resolver->Reject(context, value).Check();
+  return resolver;
+}
+
 static void promise_empty_fulfilled(const v8::FunctionCallbackInfo<v8::Value> &args) {}
 static void promise_empty_rejected(const v8::FunctionCallbackInfo<v8::Value> &args) {}
 

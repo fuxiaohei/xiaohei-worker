@@ -26,6 +26,7 @@ addEventListener("fetch", async event => {
         "highWaterMark": queueingStrategy.highWaterMark,
         "size": queueingStrategy.size(),
         "reader": reader.toString(),
+        "read_chunk": await reader.read()
     }
 
     event.respondWith(new Response("hello" + " WebStreams !!\n" + JSON.stringify(res, null, 2)));
