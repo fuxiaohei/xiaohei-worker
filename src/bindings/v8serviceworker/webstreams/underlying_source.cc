@@ -49,6 +49,10 @@ v8::Local<v8::Promise> UnderlyingSource::call_pull(v8::Local<v8::Object> control
   return call_algorithm(controller, "pull");
 }
 
+v8::Local<v8::Promise> UnderlyingSource::call_cancel(v8::Local<v8::Object> controller) {
+  return call_algorithm(controller, "cancel");
+}
+
 v8::Local<v8::Promise> UnderlyingSource::call_algorithm(v8::Local<v8::Object> controller,
                                                         const std::string &name) {
   auto isolate = controller->GetIsolate();

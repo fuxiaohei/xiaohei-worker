@@ -184,6 +184,22 @@ v8::Local<v8::Promise> ReadableStreamDefaultController::pullSteps(v8::Local<v8::
   }
 }
 
+v8::Local<v8::Promise> ReadableStreamDefaultController::cancelSteps(v8::Local<v8::Context> context,
+                                                                    v8::Local<v8::Value> reason) {
+  // https://streams.spec.whatwg.org/#rs-default-controller-private-cancel
+  // 1. Perform ! ResetQueue(this).
+  resetQueue();
+  // 2. Let result be the result of performing this.[[cancelAlgorithm]], passing
+  //    reason.
+  auto isolate = context->GetIsolate();
+  auto controller_obj = js_object_.Get(isolate);
+  auto result = source_->call_cancel(controller_obj);
+  // 3. Perform ! ReadableStreamDefaultControllerClearAlgorithms(this).
+  clearAlgorithms();
+  // 4. Return result.
+  return result;
+}
+
 // --- ReadableStreamDefaultController functions ---
 
 v8::Local<v8::FunctionTemplate> create_readablestream_controller_template(

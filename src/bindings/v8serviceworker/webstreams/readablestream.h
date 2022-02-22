@@ -26,7 +26,8 @@ enum ReadableStreamState {
 
 class ReadableStream : public common::HeapObject {
  public:
-  static v8::Local<v8::Object> CreateReadResult(v8::Isolate *isolate, v8::Local<v8::Value> value, bool done);
+  static v8::Local<v8::Object> CreateReadResult(v8::Isolate *isolate, v8::Local<v8::Value> value,
+                                                bool done);
 
  public:
   bool isLocked() { return reader_ != nullptr; }
@@ -43,6 +44,7 @@ class ReadableStream : public common::HeapObject {
   void setClose(v8::Isolate *isolate);
   void setError(v8::Isolate *isolate, v8::Local<v8::Value> error);
   v8::Local<v8::Value> getError(v8::Isolate *isolate);
+  v8::Local<v8::Promise> setCancel(v8::Isolate *isolate, v8::Local<v8::Value> cancel);
 
   void setReader(ReadableStreamGenericReader *reader) { reader_ = reader; }
 

@@ -27,6 +27,7 @@ class StreamPromise : public common::HeapObject {
   void setResolver(v8::Isolate* isolate, v8::Local<v8::Promise::Resolver> resolver) {
     value_.Reset(isolate, resolver);
   }
+  void setRejected(v8::Isolate* isolate, v8::Local<v8::Value> value);
 
  private:
   friend class common::Heap;

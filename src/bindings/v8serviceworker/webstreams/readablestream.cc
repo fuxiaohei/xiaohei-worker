@@ -11,6 +11,7 @@
 #include <bindings/v8serviceworker/webstreams/readablestream_default_controller.h>
 #include <bindings/v8serviceworker/webstreams/readablestream_default_reader.h>
 #include <bindings/v8serviceworker/webstreams/strategy.h>
+#include <bindings/v8serviceworker/webstreams/stream_promise.h>
 #include <runtime/v8rt/v8rt.h>
 #include <v8wrap/js_object.h>
 #include <v8wrap/js_value.h>
@@ -87,6 +88,45 @@ void ReadableStream::setError(v8::Isolate *isolate, v8::Local<v8::Value> error) 
     return;
   }
   // TODO(fxh): 6,7,8,9
+}
+
+static void stream_cancelAlgorithm_resolved(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+
+v8::Local<v8::Promise> ReadableStream::setCancel(v8::Isolate *isolate,
+                                                 v8::Local<v8::Value> reason) {
+  // https://streams.spec.whatwg.org/#readable-stream-cancel
+  // 1. Set stream.[[disturbed]] to true.
+  is_disturbed_ = true;
+  // 2. If stream.[[state]] is "closed", return a promise resolved with
+  //    undefined.
+  if (state_ == ReadableStreamState_Closed) {
+    return StreamPromise::CreateResolved(isolate, v8::Undefined(isolate))->getPromise(isolate);
+  }
+  // 3. If stream.[[state]] is "errored", return a promise rejected with stream.
+  //    [[storedError]].
+  if (state_ == ReadableStreamState_Errored) {
+    return StreamPromise::CreateRejected(isolate, getError(isolate))->getPromise(isolate);
+  }
+  // 4. Perform ! ReadableStreamClose(stream).
+  setClose(isolate);
+
+  // TODO(fxh):
+  // 5. Let reader be stream.[[reader]].
+  // 6. If reader is not undefined and reader implements
+  // ReadableStreamBYOBReader,
+  if (reader_ && reader_->isBYOBReader()) {
+    // TODO(fxh):
+  }
+
+  // 7. Let sourceCancelPromise be ! stream.[[readableStreamController]].
+  //    [[CancelSteps]](reason).
+  auto cancelResult = controller_->cancelSteps(isolate->GetCurrentContext(), reason);
+  // 8. Return the result of transforming sourceCancelPromise with a
+  //    fulfillment handler that returns undefined.
+  return v8wrap::promise_then(
+      isolate, cancelResult,
+      v8wrap::new_function(isolate, stream_cancelAlgorithm_resolved, nullptr),
+      v8wrap::new_function(isolate, stream_cancelAlgorithm_resolved, nullptr));
 }
 
 v8::Local<v8::Value> ReadableStream::getError(v8::Isolate *isolate) {

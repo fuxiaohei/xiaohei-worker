@@ -23,6 +23,11 @@ class ReadableStreamGenericReader {
   void initialize(v8::Local<v8::Context> context, ReadableStream *stream);
   size_t getReadRequestsSize() { return 0; }
 
+  v8::Local<v8::Promise> cancel(v8::Isolate *isolate, v8::Local<v8::Value> reason);
+  void release(v8::Isolate *isolate);
+
+  bool isBYOBReader() { return false; }
+
   ReadableStream *own_stream_ = nullptr;
   StreamPromise *closed_promise_ = nullptr;
 };

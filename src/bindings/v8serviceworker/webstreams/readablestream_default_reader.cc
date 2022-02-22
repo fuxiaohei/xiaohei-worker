@@ -45,6 +45,43 @@ void ReadableStreamGenericReader::initialize(v8::Local<v8::Context> context,
   }
 }
 
+v8::Local<v8::Promise> ReadableStreamGenericReader::cancel(v8::Isolate *isolate,
+                                                           v8::Local<v8::Value> reason) {
+  // https://streams.spec.whatwg.org/#default-reader-cancel
+  // 2. If this.[[ownerReadableStream]] is undefined, return a promise rejected
+  //    with a TypeError exception.
+  if (own_stream_ == nullptr) {
+    auto value = v8wrap::new_type_error(isolate, "ReadableStreamDefaultReader is released");
+    return StreamPromise::CreateRejected(isolate, value)->getPromise(isolate);
+  }
+  // 3. Return ! ReadableStreamReaderGenericCancel(this, reason).
+  return own_stream_->setCancel(isolate, reason);
+}
+
+void ReadableStreamGenericReader::release(v8::Isolate *isolate) {
+  // https://streams.spec.whatwg.org/#readable-stream-reader-generic-release
+  // 1. Assert: reader.[[ownerReadableStream]] is not undefined.
+  // 2. Assert: reader.[[ownerReadableStream]].[[reader]] is reader.
+  // 3. If reader.[[ownerReadableStream]].[[state]] is "readable", reject
+  //    reader.[[closedPromise]] with a TypeError exception.
+  if (own_stream_->state_ == ReadableStreamState_Readable) {
+    closed_promise_->markAsSilent(isolate);
+    closed_promise_->setRejected(isolate, v8wrap::new_type_error(isolate, "reader is released"));
+  } else {
+    // 4. Otherwise, set reader.[[closedPromise]] to a promise rejected with a
+    //    TypeError exception.
+    closed_promise_ = StreamPromise::CreateRejected(
+        isolate, v8wrap::new_type_error(isolate, "reader is released"));
+    closed_promise_->markAsSilent(isolate);
+  }
+  // 5. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
+  closed_promise_->markAsHandled(isolate);
+  // 6. Set reader.[[ownerReadableStream]].[[reader]] to undefined.
+  own_stream_->setReader(nullptr);
+  // 7. Set reader.[[ownerReadableStream]] to undefined.
+  own_stream_ = nullptr;
+}
+
 // --- ReadableStreamDefaultReader ---
 
 v8::Local<v8::Object> ReadableStreamDefaultReader::Aqcuire(v8::Local<v8::Context> context,
@@ -107,9 +144,19 @@ v8::Local<v8::Promise> ReadableStreamDefaultReader::read(v8::Local<v8::Context> 
 
 // --- ReadableStreamDefaultReader js methods----
 
-static void default_reader_js_closed_getter(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void default_reader_js_closed_getter(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  auto isolate = args.GetIsolate();
+  auto reader = v8wrap::get_ptr<ReadableStreamDefaultReader>(args.Holder());
+  auto promise = reader->closed_promise_->getPromise(isolate);
+  args.GetReturnValue().Set(promise);
+}
 
-static void default_reader_js_cancel(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void default_reader_js_cancel(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  auto isolate = args.GetIsolate();
+  auto reader = v8wrap::get_ptr<ReadableStreamDefaultReader>(args.Holder());
+  auto promise = reader->cancel(isolate, v8::Undefined(isolate));
+  args.GetReturnValue().Set(promise);
+}
 
 static void default_reader_js_read(const v8::FunctionCallbackInfo<v8::Value> &args) {
   auto isolate = args.GetIsolate();
@@ -129,7 +176,23 @@ static void default_reader_js_read(const v8::FunctionCallbackInfo<v8::Value> &ar
   args.GetReturnValue().Set(reader->read(isolate->GetCurrentContext()));
 }
 
-static void default_reader_js_releaseLock(const v8::FunctionCallbackInfo<v8::Value> &args) {}
+static void default_reader_js_releaseLock(const v8::FunctionCallbackInfo<v8::Value> &args) {
+  auto isolate = args.GetIsolate();
+  auto reader = v8wrap::get_ptr<ReadableStreamDefaultReader>(args.Holder());
+  // https://streams.spec.whatwg.org/#default-reader-release-lock
+  // 2. If this.[[ownerReadableStream]] is undefined, return.
+  if (reader->own_stream_ == nullptr) {
+    return;
+  }
+  // 3. If this.[[readRequests]] is not empty, throw a TypeError exception.
+  if (reader->getReadRequestsSize() > 0) {
+    v8wrap::throw_type_error(isolate,
+                             "ReadableStreamDefaultReader read() calls that have not yet settled");
+    return;
+  }
+  // 4. Perform ! ReadableStreamReaderGenericRelease(this).
+  reader->release(isolate);
+}
 
 v8::Local<v8::FunctionTemplate> create_readablestream_default_reader_template(
     v8wrap::IsolateData *isolateData) {

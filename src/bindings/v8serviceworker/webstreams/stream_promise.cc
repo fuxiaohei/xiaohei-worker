@@ -55,4 +55,8 @@ v8::Local<v8::Promise> StreamPromise::getPromise(v8::Isolate* isolate) {
   return value_.Get(isolate)->GetPromise();
 }
 
+void StreamPromise::setRejected(v8::Isolate* isolate, v8::Local<v8::Value> value) {
+  value_.Get(isolate)->Reject(isolate->GetCurrentContext(), value).ToChecked();
+}
+
 };  // namespace v8serviceworker

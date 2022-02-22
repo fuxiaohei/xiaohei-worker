@@ -22,6 +22,8 @@ class QueueChunk;
 class ReadableStreamDefaultController : public common::HeapObject {
  public:
   v8::Local<v8::Promise> pullSteps(v8::Local<v8::Context> context);
+  v8::Local<v8::Promise> cancelSteps(v8::Local<v8::Context> context,
+                                     v8::Local<v8::Value> reason);
 
  public:
   size_t get_queue_total_size();
